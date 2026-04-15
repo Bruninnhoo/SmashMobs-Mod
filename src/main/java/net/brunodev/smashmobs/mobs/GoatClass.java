@@ -12,12 +12,13 @@ public class GoatClass {
         player.getInventory().clearContent();
 
         // 2. Equipa a Cabeçada (Dash) no Slot 0
-        // Certifique-se de que GOAT_DASH está registrado no seu SmashMobs.java!
         player.getInventory().add(0, new ItemStack(SmashMobs.GOAT_DASH.get()));
-        player.getInventory().add(1, new ItemStack(SmashMobs.GOAT_TONGUE.get()));
+        
+        // Equipa o Engolir (Swallow) no Slot 1
+        player.getInventory().add(1, new ItemStack(SmashMobs.GOAT_SWALLOW.get()));
 
-        // TODO no futuro: Adicionar a Habilidade 2 no slot 1
-        // player.getInventory().add(1, new ItemStack(SmashMobs.GOAT_JUMP.get()));
+        // Equipa a Avalanche (Ultimate) no Slot 8
+        player.getInventory().add(8, new ItemStack(SmashMobs.GOAT_SUPREME.get()));
 
         // 3. Define a "Capa" visual da Cabra
         player.setData(ModAttachments.MORPH_DATA, "minecraft:goat");

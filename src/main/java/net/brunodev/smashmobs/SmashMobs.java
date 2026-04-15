@@ -123,8 +123,11 @@ public class SmashMobs {
         public static final DeferredItem<GoatDashItem> GOAT_DASH = ITEMS.registerItem(
                         "goat_dash", p -> new GoatDashItem(p.stacksTo(1)));
 
-        public static final DeferredItem<GoatTongueItem> GOAT_TONGUE = ITEMS.registerItem(
-                        "goat_tongue", p -> new GoatTongueItem(p.stacksTo(1)));
+        public static final DeferredItem<GoatSwallowItem> GOAT_SWALLOW = ITEMS.registerItem(
+                        "goat_swallow", p -> new GoatSwallowItem(p.stacksTo(1)));
+
+        public static final DeferredItem<GoatUltItem> GOAT_SUPREME = ITEMS.registerItem(
+                        "goat_supreme", p -> new GoatUltItem(p.stacksTo(1)));
 
         /*
          * ==================================================================

@@ -19,9 +19,9 @@ import static net.brunodev.smashmobs.SmashMobs.GOLEM_THROW_ANVIL_SOUND;
 @EventBusSubscriber(modid = "smashmobs")
 public class AbilityEvents {
 
-    //====================================
-    //-------------- IRON GOLEM -----------
-    //====================================
+    // ====================================
+    // -------------- IRON GOLEM -----------
+    // ====================================
     public static final java.util.Map<UUID, Integer> PENDING_ANVILS = new java.util.HashMap<>();
     public static final Map<FallingBlockEntity, UUID> FLYING_ANVILS = new HashMap<>();
 
@@ -37,25 +37,74 @@ public class AbilityEvents {
         public net.minecraft.world.phys.Vec3 pos;
         public net.minecraft.world.phys.Vec3 direction;
         public double distance;
+
         public GolemHook(Player o, net.minecraft.world.phys.Vec3 p, net.minecraft.world.phys.Vec3 d) {
-            owner = o; pos = p; direction = d; distance = 0;
+            owner = o;
+            pos = p;
+            direction = d;
+            distance = 0;
         }
     }
+
     public static final List<GolemHook> FLYING_HOOKS = new ArrayList<>();
 
-    //====================================
-    //-------------- CREEPER --------------
-    //====================================
+    // ====================================
+    // -------------- CREEPER --------------
+    // ====================================
     public static final Set<UUID> CREEPER_ARMED_PLAYERS = new HashSet<>();
     public static final java.util.Map<UUID, Integer> CREEPER_SUPREMES = new java.util.HashMap<>();
 
-    //====================================
-    //-------------- GOAT ----------------
-    //====================================
+    // ====================================
+    // -------------- GOAT ----------------
+    // ====================================
     public static final Map<UUID, Integer> DASHING_GOATS = new HashMap<>();
-    public static final Map<UUID, UUID> GOAT_LEASHES = new HashMap<>();
-    public static final Map<UUID, Integer> GOAT_LEASH_TIMERS = new HashMap<>();
+    public static final Map<UUID, UUID> GOAT_SWALLOWED = new HashMap<>();
+    public static final Map<UUID, Integer> GOAT_SWALLOWED_TIMERS = new HashMap<>();
+    public static final Map<UUID, Integer> GOAT_STOLEN_TIMERS = new HashMap<>();
+    public static final Map<UUID, Integer> GOAT_AVALANCHES = new HashMap<>();
 
+    public static void spitSwallowedEntity(Player goat) {
+        UUID goatId = goat.getUUID();
+        if (!GOAT_SWALLOWED.containsKey(goatId))
+            return;
+
+        if (goat.level() instanceof net.minecraft.server.level.ServerLevel sl) {
+            net.minecraft.world.entity.Entity targetEntity = sl.getEntity(GOAT_SWALLOWED.get(goatId));
+
+            if (targetEntity instanceof LivingEntity victim && victim.isAlive()) {
+                var look = goat.getLookAngle();
+                victim.setDeltaMovement(look.x * 2.0, 0.8, look.z * 2.0);
+                victim.hurt(victim.damageSources().mobAttack(goat), 6.0F);
+                victim.hurtMarked = true;
+
+                victim.removeEffect(MobEffects.INVISIBILITY);
+
+                goat.level().playSound(null, goat.blockPosition(), net.minecraft.sounds.SoundEvents.LLAMA_SPIT,
+                        net.minecraft.sounds.SoundSource.PLAYERS, 2.0F, 1.0F);
+
+                if (victim instanceof Player victimPlayer) {
+                    String morph = victimPlayer.getData(net.brunodev.smashmobs.registration.ModAttachments.MORPH_DATA);
+                    net.minecraft.world.item.Item stolenItem = null;
+                    if (morph.equals("minecraft:creeper"))
+                        stolenItem = net.brunodev.smashmobs.SmashMobs.CREEPER_EXPLOSION.get();
+                    else if (morph.equals("minecraft:iron_golem"))
+                        stolenItem = net.brunodev.smashmobs.SmashMobs.GOLEM_THROW_ANVIL.get();
+                    else if (morph.equals("minecraft:goat"))
+                        stolenItem = net.brunodev.smashmobs.SmashMobs.GOAT_DASH.get();
+
+                    if (stolenItem != null && goat.getInventory().contains(new net.minecraft.world.item.ItemStack(
+                            net.brunodev.smashmobs.SmashMobs.GOAT_SWALLOW.get()))) {
+                        goat.getInventory().setItem(2, new net.minecraft.world.item.ItemStack(stolenItem));
+                        GOAT_STOLEN_TIMERS.put(goatId, 300); // 15 Segundos
+                    }
+                }
+            }
+        }
+
+        GOAT_SWALLOWED.remove(goatId);
+        GOAT_SWALLOWED_TIMERS.remove(goatId);
+        goat.getCooldowns().addCooldown(new net.minecraft.world.item.ItemStack(net.brunodev.smashmobs.SmashMobs.GOAT_SWALLOW.get()), 100);
+    }
 
     @SubscribeEvent
     public static void onServerTick(ServerTickEvent.Post event) {
@@ -73,7 +122,8 @@ public class AbilityEvents {
             }
 
             var hitBox = anvil.getBoundingBox().inflate(0.3);
-            var targets = anvil.level().getEntitiesOfClass(LivingEntity.class, hitBox, e -> !e.getUUID().equals(throwerId));
+            var targets = anvil.level().getEntitiesOfClass(LivingEntity.class, hitBox,
+                    e -> !e.getUUID().equals(throwerId));
 
             if (!targets.isEmpty()) {
                 LivingEntity target = targets.get(0);
@@ -83,8 +133,10 @@ public class AbilityEvents {
                 double dz = target.getZ() - anvil.getZ();
                 target.knockback(1.5, -dx, -dz);
 
-                anvil.level().playSound(null, anvil.blockPosition(), GOLEM_THROW_ANVIL_SOUND.get(), net.minecraft.sounds.SoundSource.PLAYERS, 1.0F, 1.0F);
-                anvil.level().playSound(null, anvil.blockPosition(), net.minecraft.sounds.SoundEvents.IRON_GOLEM_DAMAGE, net.minecraft.sounds.SoundSource.PLAYERS, 1.0F, 0.5F);
+                anvil.level().playSound(null, anvil.blockPosition(), GOLEM_THROW_ANVIL_SOUND.get(),
+                        net.minecraft.sounds.SoundSource.PLAYERS, 1.0F, 1.0F);
+                anvil.level().playSound(null, anvil.blockPosition(), net.minecraft.sounds.SoundEvents.IRON_GOLEM_DAMAGE,
+                        net.minecraft.sounds.SoundSource.PLAYERS, 1.0F, 0.5F);
 
                 anvil.discard();
                 anvilIterator.remove();
@@ -107,12 +159,14 @@ public class AbilityEvents {
 
             // Verifica se o gancho bateu numa parede!
             var clipResult = hook.owner.level().clip(new net.minecraft.world.level.ClipContext(
-                    hook.pos, nextPos, net.minecraft.world.level.ClipContext.Block.COLLIDER, net.minecraft.world.level.ClipContext.Fluid.NONE, hook.owner
-            ));
+                    hook.pos, nextPos, net.minecraft.world.level.ClipContext.Block.COLLIDER,
+                    net.minecraft.world.level.ClipContext.Fluid.NONE, hook.owner));
 
             if (clipResult.getType() == net.minecraft.world.phys.HitResult.Type.BLOCK) {
                 // Errou! Bateu na parede. Toca um som de ferro batendo em pedra e apaga.
-                hook.owner.level().playSound(null, net.minecraft.core.BlockPos.containing(clipResult.getLocation()), net.minecraft.sounds.SoundEvents.ANVIL_PLACE, net.minecraft.sounds.SoundSource.PLAYERS, 0.5F, 2.0F);
+                hook.owner.level().playSound(null, net.minecraft.core.BlockPos.containing(clipResult.getLocation()),
+                        net.minecraft.sounds.SoundEvents.ANVIL_PLACE, net.minecraft.sounds.SoundSource.PLAYERS, 0.5F,
+                        2.0F);
                 hookIterator.remove();
                 continue;
             }
@@ -124,13 +178,17 @@ public class AbilityEvents {
             // RASTRO VISUAL: Desenha partículas pra todo mundo ver o gancho voando!
             if (hook.owner.level() instanceof net.minecraft.server.level.ServerLevel sl) {
                 // Fumaça larga e partícula de crítico pra simular um soco de ar
-                sl.sendParticles(net.minecraft.core.particles.ParticleTypes.LARGE_SMOKE, hook.pos.x, hook.pos.y, hook.pos.z, 2, 0.1, 0.1, 0.1, 0.0);
-                sl.sendParticles(net.minecraft.core.particles.ParticleTypes.CRIT, hook.pos.x, hook.pos.y, hook.pos.z, 1, 0.0, 0.0, 0.0, 0.0);
+                sl.sendParticles(net.minecraft.core.particles.ParticleTypes.LARGE_SMOKE, hook.pos.x, hook.pos.y,
+                        hook.pos.z, 2, 0.1, 0.1, 0.1, 0.0);
+                sl.sendParticles(net.minecraft.core.particles.ParticleTypes.CRIT, hook.pos.x, hook.pos.y, hook.pos.z, 1,
+                        0.0, 0.0, 0.0, 0.0);
             }
 
             // Verifica se a "ponta" do gancho encostou em alguém
-            var hitBox = new net.minecraft.world.phys.AABB(hook.pos.x - 0.5, hook.pos.y - 0.5, hook.pos.z - 0.5, hook.pos.x + 0.5, hook.pos.y + 0.5, hook.pos.z + 0.5);
-            var targets = hook.owner.level().getEntitiesOfClass(LivingEntity.class, hitBox, e -> e != hook.owner && e.isAlive());
+            var hitBox = new net.minecraft.world.phys.AABB(hook.pos.x - 0.5, hook.pos.y - 0.5, hook.pos.z - 0.5,
+                    hook.pos.x + 0.5, hook.pos.y + 0.5, hook.pos.z + 0.5);
+            var targets = hook.owner.level().getEntitiesOfClass(LivingEntity.class, hitBox,
+                    e -> e != hook.owner && e.isAlive());
 
             if (!targets.isEmpty()) {
                 // ACERTOU O SKILLSHOT!
@@ -138,7 +196,9 @@ public class AbilityEvents {
                 PULLING_ENTITIES.put(hook.owner.getUUID(), hitTarget.getUUID());
 
                 // Som de agarrão de metal
-                hook.owner.level().playSound(null, hitTarget.blockPosition(), net.minecraft.sounds.SoundEvents.IRON_GOLEM_REPAIR, net.minecraft.sounds.SoundSource.PLAYERS, 1.0F, 1.5F);
+                hook.owner.level().playSound(null, hitTarget.blockPosition(),
+                        net.minecraft.sounds.SoundEvents.IRON_GOLEM_REPAIR, net.minecraft.sounds.SoundSource.PLAYERS,
+                        1.0F, 1.5F);
                 hookIterator.remove(); // O gancho some e o alvo começa a ser puxado
                 continue;
             }
@@ -149,7 +209,6 @@ public class AbilityEvents {
             }
         }
     }
-
 
     // ========================================================
     // AÇÃO DE CLIQUE: PUXÃO E ARREMESSO DO GOLEM
@@ -170,12 +229,15 @@ public class AbilityEvents {
                     livingTarget.setDeltaMovement(look.scale(2.5).add(0, 0.8, 0));
                     livingTarget.hurt(livingTarget.damageSources().mobAttack(golemPlayer), 8.0F);
                     livingTarget.hurtMarked = true;
-                    level.playSound(null, golemPlayer.blockPosition(), net.minecraft.sounds.SoundEvents.IRON_GOLEM_ATTACK, net.minecraft.sounds.SoundSource.PLAYERS, 1.0F, 0.8F);
+                    level.playSound(null, golemPlayer.blockPosition(),
+                            net.minecraft.sounds.SoundEvents.IRON_GOLEM_ATTACK,
+                            net.minecraft.sounds.SoundSource.PLAYERS, 1.0F, 0.8F);
                 }
             }
             GRABBED_ENTITIES.remove(golemId);
             GRAB_TIMERS.remove(golemId);
-            golemPlayer.getCooldowns().addCooldown(golemPlayer.getItemInHand(net.minecraft.world.InteractionHand.MAIN_HAND), 100);
+            golemPlayer.getCooldowns()
+                    .addCooldown(golemPlayer.getItemInHand(net.minecraft.world.InteractionHand.MAIN_HAND), 100);
 
         }
         // CENA 2: ATIRAR O GANCHO! (Skillshot)
@@ -192,13 +254,14 @@ public class AbilityEvents {
                 FLYING_HOOKS.add(new GolemHook(golemPlayer, eyePos, dir));
 
                 // Som de lançamento no ar
-                level.playSound(null, golemPlayer.blockPosition(), net.minecraft.sounds.SoundEvents.FISHING_BOBBER_THROW, net.minecraft.sounds.SoundSource.PLAYERS, 1.5F, 0.5F);
+                level.playSound(null, golemPlayer.blockPosition(),
+                        net.minecraft.sounds.SoundEvents.FISHING_BOBBER_THROW, net.minecraft.sounds.SoundSource.PLAYERS,
+                        1.5F, 0.5F);
 
                 // TODO: Chamar o pacote de rede para esticar o braço visualmente
             }
         }
     }
-
 
     // ========================================================
     // TICK DO JOGADOR
@@ -206,7 +269,8 @@ public class AbilityEvents {
     @SubscribeEvent
     public static void onPlayerTick(net.neoforged.neoforge.event.tick.PlayerTickEvent.Post event) {
         Player player = event.getEntity();
-        if (player.level().isClientSide()) return;
+        if (player.level().isClientSide())
+            return;
 
         if (PENDING_TRAINS.containsKey(player.getUUID())) {
             int ticksLeft = PENDING_TRAINS.get(player.getUUID());
@@ -235,7 +299,8 @@ public class AbilityEvents {
         // --- LÓGICA DO PUXÃO (TRAZENDO DE LONGE) ---
         if (PULLING_ENTITIES.containsKey(player.getUUID())) {
             if (player.level() instanceof net.minecraft.server.level.ServerLevel serverLevel) {
-                net.minecraft.world.entity.Entity target = serverLevel.getEntity(PULLING_ENTITIES.get(player.getUUID()));
+                net.minecraft.world.entity.Entity target = serverLevel
+                        .getEntity(PULLING_ENTITIES.get(player.getUUID()));
 
                 if (target instanceof LivingEntity livingTarget && livingTarget.isAlive()) {
                     double dist = livingTarget.distanceTo(player);
@@ -248,7 +313,9 @@ public class AbilityEvents {
                         PULLING_ENTITIES.remove(player.getUUID());
                         GRABBED_ENTITIES.put(player.getUUID(), livingTarget.getUUID());
                         GRAB_TIMERS.put(player.getUUID(), 60);
-                        player.level().playSound(null, player.blockPosition(), net.minecraft.sounds.SoundEvents.IRON_GOLEM_REPAIR, net.minecraft.sounds.SoundSource.PLAYERS, 1.0F, 2.0F);
+                        player.level().playSound(null, player.blockPosition(),
+                                net.minecraft.sounds.SoundEvents.IRON_GOLEM_REPAIR,
+                                net.minecraft.sounds.SoundSource.PLAYERS, 1.0F, 2.0F);
                     }
                 } else {
                     PULLING_ENTITIES.remove(player.getUUID());
@@ -261,7 +328,8 @@ public class AbilityEvents {
             int timer = GRAB_TIMERS.getOrDefault(player.getUUID(), 0);
 
             if (player.level() instanceof net.minecraft.server.level.ServerLevel serverLevel) {
-                net.minecraft.world.entity.Entity target = serverLevel.getEntity(GRABBED_ENTITIES.get(player.getUUID()));
+                net.minecraft.world.entity.Entity target = serverLevel
+                        .getEntity(GRABBED_ENTITIES.get(player.getUUID()));
 
                 if (target instanceof LivingEntity livingTarget && livingTarget.isAlive() && timer > 0) {
                     var look = player.getLookAngle();
@@ -278,7 +346,8 @@ public class AbilityEvents {
                 } else {
                     GRABBED_ENTITIES.remove(player.getUUID());
                     GRAB_TIMERS.remove(player.getUUID());
-                    player.getCooldowns().addCooldown(player.getItemInHand(net.minecraft.world.InteractionHand.MAIN_HAND), 100);
+                    player.getCooldowns()
+                            .addCooldown(player.getItemInHand(net.minecraft.world.InteractionHand.MAIN_HAND), 100);
                 }
             }
         }
@@ -289,32 +358,36 @@ public class AbilityEvents {
 
             if (ticksLeft > 0) {
                 player.addEffect(new net.minecraft.world.effect.MobEffectInstance(
-                        MobEffects.SLOWNESS, 2, 255, false, false, false
-                ));
+                        MobEffects.SLOWNESS, 2, 255, false, false, false));
 
                 double radius = 8.0;
                 var area = player.getBoundingBox().inflate(radius);
-                var targets = player.level().getEntitiesOfClass(net.minecraft.world.entity.LivingEntity.class, area, e -> e != player);
+                var targets = player.level().getEntitiesOfClass(net.minecraft.world.entity.LivingEntity.class, area,
+                        e -> e != player);
 
                 for (var target : targets) {
                     double dx = player.getX() - target.getX();
                     double dy = player.getY() - target.getY();
                     double dz = player.getZ() - target.getZ();
 
-                    net.minecraft.world.phys.Vec3 pull = new net.minecraft.world.phys.Vec3(dx, dy, dz).normalize().scale(0.08);
+                    net.minecraft.world.phys.Vec3 pull = new net.minecraft.world.phys.Vec3(dx, dy, dz).normalize()
+                            .scale(0.08);
 
                     target.setDeltaMovement(target.getDeltaMovement().add(pull));
                     target.hurtMarked = true;
                 }
 
                 if (ticksLeft % 5 == 0) {
-                    player.level().playSound(null, player.blockPosition(), net.minecraft.sounds.SoundEvents.CREEPER_PRIMED, net.minecraft.sounds.SoundSource.PLAYERS, 1.0F, 0.5F);
+                    player.level().playSound(null, player.blockPosition(),
+                            net.minecraft.sounds.SoundEvents.CREEPER_PRIMED, net.minecraft.sounds.SoundSource.PLAYERS,
+                            1.0F, 0.5F);
                 }
 
                 CREEPER_SUPREMES.put(player.getUUID(), ticksLeft - 1);
             } else {
                 CREEPER_SUPREMES.remove(player.getUUID());
-                player.level().explode(player, player.getX(), player.getY() + 1, player.getZ(), 6.0F, false, Level.ExplosionInteraction.NONE);
+                player.level().explode(player, player.getX(), player.getY() + 1, player.getZ(), 6.0F, false,
+                        Level.ExplosionInteraction.NONE);
             }
         }
 
@@ -326,25 +399,30 @@ public class AbilityEvents {
                 var look = player.getLookAngle();
 
                 // 1. O IMPULSO: Joga o jogador para frente muito rápido!
-                // Ignoramos a altura (Y) para o dash ser retinho no chão, mas você pode pular e dar o dash no ar!
+                // Ignoramos a altura (Y) para o dash ser retinho no chão, mas você pode pular e
+                // dar o dash no ar!
                 player.setDeltaMovement(look.x * 1.8, player.getDeltaMovement().y, look.z * 1.8);
                 player.hurtMarked = true;
 
                 // Partículas de poeira levantando do chão
                 if (player.level() instanceof net.minecraft.server.level.ServerLevel sl) {
-                    sl.sendParticles(net.minecraft.core.particles.ParticleTypes.CLOUD, player.getX(), player.getY(), player.getZ(), 2, 0.2, 0.0, 0.2, 0.0);
+                    sl.sendParticles(net.minecraft.core.particles.ParticleTypes.CLOUD, player.getX(), player.getY(),
+                            player.getZ(), 2, 0.2, 0.0, 0.2, 0.0);
                 }
 
                 // 2. RADAR DE COLISÃO: Bateu em alguém?
                 var hitBox = player.getBoundingBox().inflate(0.5).expandTowards(look.x, 0, look.z);
-                var targets = player.level().getEntitiesOfClass(LivingEntity.class, hitBox, e -> e != player && e.isAlive());
+                var targets = player.level().getEntitiesOfClass(LivingEntity.class, hitBox,
+                        e -> e != player && e.isAlive());
 
                 if (!targets.isEmpty()) {
                     // ACERTOU!
                     LivingEntity target = targets.get(0);
 
                     // Som de impacto bruto
-                    player.level().playSound(null, target.blockPosition(), net.minecraft.sounds.SoundEvents.GOAT_RAM_IMPACT, net.minecraft.sounds.SoundSource.PLAYERS, 2.0F, 1.0F);
+                    player.level().playSound(null, target.blockPosition(),
+                            net.minecraft.sounds.SoundEvents.GOAT_RAM_IMPACT, net.minecraft.sounds.SoundSource.PLAYERS,
+                            2.0F, 1.0F);
 
                     // Dano e Knockback Supremo!
                     target.hurt(target.damageSources().mobAttack(player), 10.0F); // 5 corações
@@ -366,61 +444,105 @@ public class AbilityEvents {
                 DASHING_GOATS.remove(player.getUUID());
             }
         }
+        // --- LOGICA DE ROUBO DE HABILIDADE TEMPO ---
+        if (GOAT_STOLEN_TIMERS.containsKey(player.getUUID())) {
+            int ticksLeft = GOAT_STOLEN_TIMERS.get(player.getUUID());
+            if (ticksLeft > 0) {
+                GOAT_STOLEN_TIMERS.put(player.getUUID(), ticksLeft - 1);
+            } else {
+                GOAT_STOLEN_TIMERS.remove(player.getUUID());
+                player.getInventory().setItem(2, net.minecraft.world.item.ItemStack.EMPTY);
+            }
+        }
 
-        // --- LÓGICA DA LÍNGUA ELÁSTICA (GOAT SIMULATOR) ---
-        if (GOAT_LEASHES.containsKey(player.getUUID())) {
-            int ticksLeft = GOAT_LEASH_TIMERS.getOrDefault(player.getUUID(), 0);
+        // --- LÓGICA DE ENGOLIR (KIRBY) ---
+        if (GOAT_SWALLOWED.containsKey(player.getUUID())) {
+            int ticksLeft = GOAT_SWALLOWED_TIMERS.getOrDefault(player.getUUID(), 0);
 
             if (player.level() instanceof net.minecraft.server.level.ServerLevel sl) {
-                net.minecraft.world.entity.Entity targetEntity = sl.getEntity(GOAT_LEASHES.get(player.getUUID()));
+                net.minecraft.world.entity.Entity targetEntity = sl.getEntity(GOAT_SWALLOWED.get(player.getUUID()));
 
                 if (targetEntity instanceof LivingEntity victim && victim.isAlive() && ticksLeft > 0) {
 
-                    double distance = victim.distanceTo(player);
+                    victim.teleportTo(player.getX(), player.getY(), player.getZ());
+                    victim.setDeltaMovement(0, 0, 0);
+                    victim.addEffect(new net.minecraft.world.effect.MobEffectInstance(
+                            net.minecraft.world.effect.MobEffects.INVISIBILITY, 2, 0, false, false, false));
 
-                    // ==========================================
-                    // O DESENHO DA LÍNGUA COM PARTÍCULAS
-                    // Traça uma linha de partículas rosa/gosmentas da cabra até a vítima
-                    // ==========================================
-                    double steps = distance * 2; // Quantidade de partículas baseada na distância
-                    double dx = (victim.getX() - player.getX()) / steps;
-                    double dy = ((victim.getY() + 1.0) - (player.getY() + 1.0)) / steps;
-                    double dz = (victim.getZ() - player.getZ()) / steps;
-
-                    for (int i = 0; i < steps; i++) {
-                        sl.sendParticles(net.minecraft.core.particles.ParticleTypes.DRIPPING_HONEY,
-                                player.getX() + (dx * i), (player.getY() + 1.0) + (dy * i), player.getZ() + (dz * i),
-                                1, 0, 0, 0, 0);
+                    if (ticksLeft % 10 == 0) {
+                        victim.hurt(victim.damageSources().magic(), 1.0F);
                     }
 
-                    // ==========================================
-                    // A FÍSICA DO ELÁSTICO
-                    // ==========================================
-                    // Se o cara estiver a mais de 3 blocos de distância, a corda estica e puxa ele!
-                    if (distance > 3.0) {
-                        var pullVector = player.position().subtract(victim.position()).normalize();
-
-                        // Quanto mais longe, mais forte puxa (Efeito elástico!)
-                        double tension = Math.min(distance * 0.15, 2.0);
-
-                        // Adicionamos um pouco de movimento Y (0.2) para ele sair quicando e não travar nos blocos do chão
-                        victim.setDeltaMovement(pullVector.x * tension, pullVector.y * tension + 0.2, pullVector.z * tension);
-                        victim.hurtMarked = true;
-                    }
-
-                    GOAT_LEASH_TIMERS.put(player.getUUID(), ticksLeft - 1);
+                    GOAT_SWALLOWED_TIMERS.put(player.getUUID(), ticksLeft - 1);
                 } else {
-                    // O tempo acabou ou o inimigo morreu. Quebra a língua!
-                    GOAT_LEASHES.remove(player.getUUID());
-                    GOAT_LEASH_TIMERS.remove(player.getUUID());
+                    spitSwallowedEntity(player);
+                }
+            }
+        }
 
-                    // Som de chicote/elástico quebrando
-                    player.level().playSound(null, player.blockPosition(), SoundEvents.BEEHIVE_DRIP, net.minecraft.sounds.SoundSource.PLAYERS, 1.0F, 2.0F);
+        // --- LÓGICA DA ULTIMATE DE CABRA (AVALANCHE) ---
+        if (GOAT_AVALANCHES.containsKey(player.getUUID())) {
+            int phaseTicks = GOAT_AVALANCHES.get(player.getUUID());
+
+            if (phaseTicks > 0) { // FASE 1: RODÓPIO
+                player.setDeltaMovement(0, 0, 0);
+                player.hurtMarked = true;
+
+                if (player.level() instanceof net.minecraft.server.level.ServerLevel sl) {
+                    sl.sendParticles(net.minecraft.core.particles.ParticleTypes.SWEEP_ATTACK, player.getX(),
+                            player.getY() + 1.0, player.getZ(), 3, 1.5, 0.5, 1.5, 0.0);
+                }
+
+                if (phaseTicks % 5 == 0) {
+                    player.level().playSound(null, player.blockPosition(),
+                            net.minecraft.sounds.SoundEvents.PLAYER_ATTACK_SWEEP,
+                            net.minecraft.sounds.SoundSource.PLAYERS, 1.0F, 1.0F);
+                    var area = player.getBoundingBox().inflate(3.0);
+                    var targets = player.level().getEntitiesOfClass(LivingEntity.class, area,
+                            e -> e != player && e.isAlive());
+                    for (var t : targets) {
+                        t.hurt(t.damageSources().mobAttack(player), 3.0F);
+                        var pull = player.position().subtract(t.position()).normalize().scale(0.1);
+                        t.setDeltaMovement(t.getDeltaMovement().add(pull));
+                    }
+                }
+
+                GOAT_AVALANCHES.put(player.getUUID(), phaseTicks - 1);
+            } else if (phaseTicks == 0) { // FASE 2: O PULO
+                player.setDeltaMovement(0, 1.5, 0);
+                player.hurtMarked = true;
+                player.level().playSound(null, player.blockPosition(), net.minecraft.sounds.SoundEvents.GOAT_LONG_JUMP,
+                        net.minecraft.sounds.SoundSource.PLAYERS, 2.0F, 1.0F);
+                GOAT_AVALANCHES.put(player.getUUID(), -1);
+            } else if (phaseTicks == -1) {
+                // FASE 3: A QUEDA
+                if (player.onGround() && player.fallDistance > 0.5) {
+                    player.level().playSound(null, player.blockPosition(),
+                            net.minecraft.sounds.SoundEvents.GENERIC_EXPLODE.value(),
+                            net.minecraft.sounds.SoundSource.PLAYERS, 2.0F, 0.8F);
+
+                    if (player.level() instanceof net.minecraft.server.level.ServerLevel sl) {
+                        sl.sendParticles(net.minecraft.core.particles.ParticleTypes.EXPLOSION_EMITTER, player.getX(),
+                                player.getY(), player.getZ(), 1, 0, 0, 0, 0.0);
+                    }
+
+                    var area = player.getBoundingBox().inflate(6.0);
+                    var targets = player.level().getEntitiesOfClass(LivingEntity.class, area,
+                            e -> e != player && e.isAlive());
+                    for (var t : targets) {
+                        t.hurt(t.damageSources().mobAttack(player), 15.0F);
+                        t.addEffect(new net.minecraft.world.effect.MobEffectInstance(
+                                net.minecraft.world.effect.MobEffects.SLOWNESS, 60, 4));
+
+                        double dx = t.getX() - player.getX();
+                        double dz = t.getZ() - player.getZ();
+                        t.knockback(1.5, -dx, -dz);
+                    }
+                    GOAT_AVALANCHES.remove(player.getUUID()); // Fim da ultimate
                 }
             }
         }
     }
-
 
     // ========================================================
     // QUEDA DO CREEPER
@@ -431,11 +553,11 @@ public class AbilityEvents {
             if (CREEPER_ARMED_PLAYERS.contains(player.getUUID())) {
                 CREEPER_ARMED_PLAYERS.remove(player.getUUID());
                 event.setCanceled(true);
-                player.level().explode(player, player.getX(), player.getY(), player.getZ(), 3.0F, false, Level.ExplosionInteraction.NONE);
+                player.level().explode(player, player.getX(), player.getY(), player.getZ(), 3.0F, false,
+                        Level.ExplosionInteraction.NONE);
             }
         }
     }
-
 
     // ========================================================
     // CRIADOR DO PROJÉTIL DA BIGORNA
@@ -446,7 +568,8 @@ public class AbilityEvents {
         var spawnPos = net.minecraft.core.BlockPos.containing(player.getX(), player.getEyeY() + 0.5D, player.getZ());
         var oldState = level.getBlockState(spawnPos);
 
-        FallingBlockEntity anvil = FallingBlockEntity.fall(level, spawnPos, net.minecraft.world.level.block.Blocks.ANVIL.defaultBlockState());
+        FallingBlockEntity anvil = FallingBlockEntity.fall(level, spawnPos,
+                net.minecraft.world.level.block.Blocks.ANVIL.defaultBlockState());
 
         level.setBlock(spawnPos, oldState, 3);
         anvil.setHurtsEntities(2.0F, 20);
@@ -454,7 +577,8 @@ public class AbilityEvents {
 
         anvil.setDeltaMovement(look.scale(2.5D).add(0, 0.2D, 0));
         FLYING_ANVILS.put(anvil, player.getUUID());
-        level.playSound(null, player.blockPosition(), net.minecraft.sounds.SoundEvents.ANVIL_DESTROY, net.minecraft.sounds.SoundSource.PLAYERS, 1.0F, 1.5F);
+        level.playSound(null, player.blockPosition(), net.minecraft.sounds.SoundEvents.ANVIL_DESTROY,
+                net.minecraft.sounds.SoundSource.PLAYERS, 1.0F, 1.5F);
     }
 
     private static void spawnTrainUltimate(Player player) {
@@ -467,12 +591,14 @@ public class AbilityEvents {
         double spawnY = player.getY();
         double spawnZ = player.getZ() - (look.z * 5);
 
-        net.brunodev.smashmobs.entity.GolemTrainEntity train = new net.brunodev.smashmobs.entity.GolemTrainEntity(net.brunodev.smashmobs.SmashMobs.GOLEM_TRAIN.get(), level);
+        net.brunodev.smashmobs.entity.GolemTrainEntity train = new net.brunodev.smashmobs.entity.GolemTrainEntity(
+                net.brunodev.smashmobs.SmashMobs.GOLEM_TRAIN.get(), level);
 
         // Posição inicial nas costas
         train.setPos(spawnX, spawnY, spawnZ);
 
-        // Vai em alta velocidade na direção que o Golem estava olhando (Velocidade 2.0 = Muito rápido!)
+        // Vai em alta velocidade na direção que o Golem estava olhando (Velocidade 2.0
+        // = Muito rápido!)
         train.setDeltaMovement(look.x * 2.0, 0, look.z * 2.0);
         train.setOwner(player);
 
@@ -492,6 +618,7 @@ public class AbilityEvents {
 
         level.addFreshEntity(train);
 
-        level.playSound(null, player.blockPosition(), GOLEM_SUPREME_SOUND.get(), net.minecraft.sounds.SoundSource.PLAYERS, 2.0F, 0.9F);
+        level.playSound(null, player.blockPosition(), GOLEM_SUPREME_SOUND.get(),
+                net.minecraft.sounds.SoundSource.PLAYERS, 2.0F, 0.9F);
     }
 }
