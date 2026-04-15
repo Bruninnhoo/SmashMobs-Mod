@@ -1,0 +1,27 @@
+{
+  "creeper_launch": {
+    "category": "player",
+    "subtitle": "Creeper usou a launch",
+    "sounds": [
+      "smashmobs:creeper_launch"
+    ]
+  },
+  "golem_throw_anvil": {
+    "category": "player",
+    "sounds": [
+      "smashmobs:golem_throw_anvil"
+    ]
+  },"golem_supreme": {
+    "category": "player",
+    "sounds": [
+      "smashmobs:golem_supreme"
+    ]
+  },
+  "pick_mob": {
+    "category": "player",
+    "subtitle": "Você escolheu um mob!",
+    "sounds": [
+      "smashmobs:pick_mob"
+    ]
+  }
+}

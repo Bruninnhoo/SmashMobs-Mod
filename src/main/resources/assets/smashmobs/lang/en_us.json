@@ -1,0 +1,13 @@
+{
+  "itemGroup.smashmobs": "Example Mod Tab",
+  "block.smashmobs.example_block": "Example Block",
+  "item.smashmobs.example_item": "Example Item",
+
+  "smashmobs.configuration.title": "SmashMobs Configs",
+  "smashmobs.configuration.section.smashmobs.common.toml": "SmashMobs Configs",
+  "smashmobs.configuration.section.smashmobs.common.toml.title": "SmashMobs Configs",
+  "smashmobs.configuration.items": "Item List",
+  "smashmobs.configuration.logDirtBlock": "Log Dirt Block",
+  "smashmobs.configuration.magicNumberIntroduction": "Magic Number Text",
+  "smashmobs.configuration.magicNumber": "Magic Number"
+}
