@@ -14,6 +14,7 @@ public class MorphSelectionScreen extends Screen {
     private Button creeperButton;
     private Button ironGolemButton;
     private Button goatButton;
+    private Button chickenButton;
 
     public MorphSelectionScreen() {
         super(Component.literal("Selecione seu Mob"));
@@ -24,54 +25,69 @@ public class MorphSelectionScreen extends Screen {
         int centerX = this.width / 2;
         int centerY = this.height / 2;
 
+        // Calculamos a posição inicial para centralizar 4 botões de 40px com 10px de espaço
+        // Total = (4 * 40) + (3 * 10) = 190px
+        int startX = centerX - 95;
+
         // --- BOTÃO DO CREEPER ---
         this.creeperButton = Button.builder(Component.empty(), (btn) -> {
-                    if (net.minecraft.client.Minecraft.getInstance().getConnection() != null) {
-                        net.minecraft.client.Minecraft.getInstance().getConnection().send(
-                                new net.minecraft.network.protocol.common.ServerboundCustomPayloadPacket(new MorphPacket("creeper"))
-                        );
-                    }
-                    this.onClose();
-                })
-                .bounds(centerX - 45, centerY - 20, 40, 40)
+            if (net.minecraft.client.Minecraft.getInstance().getConnection() != null) {
+                net.minecraft.client.Minecraft.getInstance().getConnection().send(
+                        new net.minecraft.network.protocol.common.ServerboundCustomPayloadPacket(
+                                new MorphPacket("creeper")));
+            }
+            this.onClose();
+        })
+                .bounds(startX, centerY - 20, 40, 40)
                 .tooltip(Tooltip.create(Component.literal("CREEPER")))
                 .build();
-
-        // A MÁGICA 1: Tira a textura feia do Minecraft deixando o botão invisível!
         this.creeperButton.setAlpha(0.0F);
         this.addRenderableWidget(creeperButton);
 
         // --- BOTÃO DO IRON GOLEM ---
         this.ironGolemButton = Button.builder(Component.empty(), (btn) -> {
-                    if (net.minecraft.client.Minecraft.getInstance().getConnection() != null) {
-                        net.minecraft.client.Minecraft.getInstance().getConnection().send(
-                                new net.minecraft.network.protocol.common.ServerboundCustomPayloadPacket(new MorphPacket("iron_golem"))
-                        );
-                    }
-                    this.onClose();
-                })
-                .bounds(centerX + 5, centerY - 20, 40, 40)
+            if (net.minecraft.client.Minecraft.getInstance().getConnection() != null) {
+                net.minecraft.client.Minecraft.getInstance().getConnection().send(
+                        new net.minecraft.network.protocol.common.ServerboundCustomPayloadPacket(
+                                new MorphPacket("iron_golem")));
+            }
+            this.onClose();
+        })
+                .bounds(startX + 50, centerY - 20, 40, 40)
                 .tooltip(Tooltip.create(Component.literal("IRON GOLEM")))
                 .build();
-
-        // Deixa invisível também
         this.ironGolemButton.setAlpha(0.0F);
         this.addRenderableWidget(ironGolemButton);
 
         // --- BOTÃO GOAT ---
         this.goatButton = Button.builder(Component.empty(), (btn) -> {
-                    if (net.minecraft.client.Minecraft.getInstance().getConnection() != null) {
-                        net.minecraft.client.Minecraft.getInstance().getConnection().send(
-                                new net.minecraft.network.protocol.common.ServerboundCustomPayloadPacket(new MorphPacket("goat"))
-                        );
-                    }
-                    this.onClose();
-                })
-                .bounds(centerX + 30, centerY - 20, 40, 40) // <--- MUDOU AQUI
+            if (net.minecraft.client.Minecraft.getInstance().getConnection() != null) {
+                net.minecraft.client.Minecraft.getInstance().getConnection().send(
+                        new net.minecraft.network.protocol.common.ServerboundCustomPayloadPacket(
+                                new MorphPacket("goat")));
+            }
+            this.onClose();
+        })
+                .bounds(startX + 100, centerY - 20, 40, 40)
                 .tooltip(Tooltip.create(Component.literal("GOAT")))
                 .build();
         this.goatButton.setAlpha(0.0F);
         this.addRenderableWidget(goatButton);
+
+        // --- BOTÃO CHICKEN ---
+        this.chickenButton = Button.builder(Component.empty(), (btn) -> {
+            if (net.minecraft.client.Minecraft.getInstance().getConnection() != null) {
+                net.minecraft.client.Minecraft.getInstance().getConnection().send(
+                        new net.minecraft.network.protocol.common.ServerboundCustomPayloadPacket(
+                                new MorphPacket("chicken")));
+            }
+            this.onClose();
+        })
+                .bounds(startX + 150, centerY - 20, 40, 40)
+                .tooltip(Tooltip.create(Component.literal("CHICKEN")))
+                .build();
+        this.chickenButton.setAlpha(0.0F);
+        this.addRenderableWidget(chickenButton);
     }
 
     @Override
@@ -93,7 +109,7 @@ public class MorphSelectionScreen extends Screen {
         if (this.creeperButton.isHovered()) {
             // Efeito Brilhante de Seleção: Borda Branca + Fundo Verde Transparente
             graphics.fill(cx - 2, cy - 2, cx + 42, cy + 42, 0xFFFFFFFF); // Desenha uma borda maior por trás
-            graphics.fill(cx, cy, cx + 40, cy + 40, 0xAA22CC22);         // Desenha o fundo verde por cima
+            graphics.fill(cx, cy, cx + 40, cy + 40, 0xAA22CC22); // Desenha o fundo verde por cima
         } else {
             // Efeito Normal: Um bloco de vidro escuro e estiloso
             graphics.fill(cx, cy, cx + 40, cy + 40, 0xAA000000);
@@ -101,7 +117,6 @@ public class MorphSelectionScreen extends Screen {
 
         // Coloca a cabeça em cima da pintura
         graphics.renderItem(new ItemStack(Items.CREEPER_HEAD), cx + 12, cy + 12);
-
 
         // --- VISUAL DO IRON GOLEM ---
         int ix = this.ironGolemButton.getX();
@@ -123,14 +138,23 @@ public class MorphSelectionScreen extends Screen {
         int gy = this.goatButton.getY();
 
         if (this.goatButton.isHovered()) {
-            // Efeito Brilhante de Seleção: Borda Branca + Fundo Cinza/Azulado Transparente
             graphics.fill(gx - 2, gy - 2, gx + 42, gy + 42, 0xFFFFFFFF);
             graphics.fill(gx, gy, gx + 40, gy + 40, 0xAAAA7744);
         } else {
-            // Efeito Normal: Vidro escuro
             graphics.fill(gx, gy, gx + 40, gy + 40, 0xAA000000);
         }
-
         graphics.renderItem(new ItemStack(Items.GOAT_HORN), gx + 12, gy + 12);
+
+        // --- VISUAL CHICKEN ---
+        int chx = this.chickenButton.getX();
+        int chy = this.chickenButton.getY();
+
+        if (this.chickenButton.isHovered()) {
+            graphics.fill(chx - 2, chy - 2, chx + 42, chy + 42, 0xFFFFFFFF);
+            graphics.fill(chx, chy, chx + 40, chy + 40, 0xAAFFFFAA); // Amarelo claro/palha
+        } else {
+            graphics.fill(chx, chy, chx + 40, chy + 40, 0xAA000000);
+        }
+        graphics.renderItem(new ItemStack(Items.EGG), chx + 12, chy + 12);
     }
 }

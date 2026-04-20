@@ -129,6 +129,16 @@ public class SmashMobs {
         public static final DeferredItem<GoatUltItem> GOAT_SUPREME = ITEMS.registerItem(
                         "goat_supreme", p -> new GoatUltItem(p.stacksTo(1)));
 
+        // =-=-=-==-= CHICKEN =-=-=-==-=
+        public static final DeferredItem<ChickenTrapItem> CHICKEN_TRAP = ITEMS.registerItem(
+                        "chicken_trap", p -> new ChickenTrapItem(p.stacksTo(1)));
+        
+        public static final DeferredItem<ChickenMachineGunItem> CHICKEN_MACHINE_GUN = ITEMS.registerItem(
+                        "chicken_machine_gun", p -> new ChickenMachineGunItem(p.stacksTo(1)));
+
+        public static final DeferredItem<ChickenUltItem> CHICKEN_SUPREME = ITEMS.registerItem(
+                        "chicken_supreme", p -> new ChickenUltItem(p.stacksTo(1)));
+
         /*
          * ==================================================================
          * TAB CRIATIVA

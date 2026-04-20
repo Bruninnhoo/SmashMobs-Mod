@@ -1,6 +1,5 @@
 package net.brunodev.smashmobs.server;
 
-import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.item.FallingBlockEntity;
@@ -63,6 +62,16 @@ public class AbilityEvents {
     public static final Map<UUID, Integer> GOAT_STOLEN_TIMERS = new HashMap<>();
     public static final Map<UUID, Integer> GOAT_AVALANCHES = new HashMap<>();
 
+    // ====================================
+    // ------------ CHICKEN ---------------
+    // ====================================
+    public static final Map<net.minecraft.world.entity.item.ItemEntity, UUID> CHICKEN_MINES = new HashMap<>();
+    public static final Map<UUID, Integer> CHICKEN_KNOCKBACK_VULNERABILITY = new HashMap<>();
+    public static final Map<UUID, Integer> CHICKEN_BOMBERS = new HashMap<>();
+    public static final java.util.Set<net.minecraft.world.entity.projectile.Projectile> CHICKEN_BOMBER_EGGS = new HashSet<>();
+    public static final Map<UUID, Integer> CHICKEN_BOMBER_COOLDOWN = new HashMap<>();
+    public static final Map<UUID, Integer> CHICKEN_MACHINE_GUN_ACTIVE = new HashMap<>();
+
     public static void spitSwallowedEntity(Player goat) {
         UUID goatId = goat.getUUID();
         if (!GOAT_SWALLOWED.containsKey(goatId))
@@ -103,7 +112,8 @@ public class AbilityEvents {
 
         GOAT_SWALLOWED.remove(goatId);
         GOAT_SWALLOWED_TIMERS.remove(goatId);
-        goat.getCooldowns().addCooldown(new net.minecraft.world.item.ItemStack(net.brunodev.smashmobs.SmashMobs.GOAT_SWALLOW.get()), 100);
+        goat.getCooldowns().addCooldown(
+                new net.minecraft.world.item.ItemStack(net.brunodev.smashmobs.SmashMobs.GOAT_SWALLOW.get()), 100);
     }
 
     @SubscribeEvent
@@ -142,8 +152,50 @@ public class AbilityEvents {
                 anvilIterator.remove();
             }
         }
+        // 2. RADAR DE MINAS DA GALINHA
+        var mineIterator = CHICKEN_MINES.entrySet().iterator();
+        while (mineIterator.hasNext()) {
+            var entry = mineIterator.next();
+            net.minecraft.world.entity.item.ItemEntity eggMine = entry.getKey();
+            UUID ownerId = entry.getValue();
 
-        // 2. O RADAR DO SKILLSHOT (O Puxão do Blitzcrank)
+            if (!eggMine.isAlive()) {
+                mineIterator.remove();
+                continue;
+            }
+
+            var hitBox = eggMine.getBoundingBox().inflate(1.5);
+            var targets = eggMine.level().getEntitiesOfClass(LivingEntity.class, hitBox,
+                    e -> !e.getUUID().equals(ownerId) && e.isAlive());
+
+            if (!targets.isEmpty()) {
+                LivingEntity victim = targets.get(0);
+
+                double dx = victim.getX() - eggMine.getX();
+                double dz = victim.getZ() - eggMine.getZ();
+                victim.knockback(1.8, -dx, -dz);
+                victim.hurt(victim.damageSources().magic(), 2.0F);
+
+                eggMine.level().playSound(null, eggMine.blockPosition(), net.minecraft.sounds.SoundEvents.CHICKEN_EGG,
+                        net.minecraft.sounds.SoundSource.PLAYERS, 2.0F, 0.5F);
+                eggMine.level().playSound(null, eggMine.blockPosition(),
+                        net.minecraft.sounds.SoundEvents.GENERIC_EXPLODE.value(),
+                        net.minecraft.sounds.SoundSource.PLAYERS, 0.8F, 1.5F);
+
+                if (eggMine.level() instanceof net.minecraft.server.level.ServerLevel sl) {
+                    sl.sendParticles(net.minecraft.core.particles.ParticleTypes.EXPLOSION, eggMine.getX(),
+                            eggMine.getY(), eggMine.getZ(), 2, 0.2, 0.2, 0.2, 0.0);
+                }
+
+                CHICKEN_KNOCKBACK_VULNERABILITY.put(victim.getUUID(), 100);
+
+                eggMine.discard();
+                mineIterator.remove();
+                continue;
+            }
+        }
+
+        // 3. O RADAR DO SKILLSHOT (O Puxão do Blitzcrank)
         var hookIterator = FLYING_HOOKS.iterator();
         while (hookIterator.hasNext()) {
             GolemHook hook = hookIterator.next();
@@ -454,6 +506,55 @@ public class AbilityEvents {
                 player.getInventory().setItem(2, net.minecraft.world.item.ItemStack.EMPTY);
             }
         }
+        // --- CHICKEN KNOCKBACK VULNERABILITY DEGRADE ---
+        if (CHICKEN_KNOCKBACK_VULNERABILITY.containsKey(player.getUUID())) {
+            int ticksLeft = CHICKEN_KNOCKBACK_VULNERABILITY.get(player.getUUID());
+            if (ticksLeft > 0) {
+                CHICKEN_KNOCKBACK_VULNERABILITY.put(player.getUUID(), ticksLeft - 1);
+            } else {
+                CHICKEN_KNOCKBACK_VULNERABILITY.remove(player.getUUID());
+            }
+        }
+
+        // --- GALINHA BOMBARDEIRA (ULTIMATE) TICK ---
+        if (CHICKEN_BOMBERS.containsKey(player.getUUID())) {
+            int ticksLeft = CHICKEN_BOMBERS.get(player.getUUID());
+            if (ticksLeft > 0) {
+                if (CHICKEN_BOMBER_COOLDOWN.containsKey(player.getUUID())) {
+                    int cd = CHICKEN_BOMBER_COOLDOWN.get(player.getUUID());
+                    if (cd > 0)
+                        CHICKEN_BOMBER_COOLDOWN.put(player.getUUID(), cd - 1);
+                }
+
+                player.addEffect(new net.minecraft.world.effect.MobEffectInstance(
+                        net.minecraft.world.effect.MobEffects.SLOW_FALLING, 5, 0, false, false, false));
+
+                if (ticksLeft > 140) {
+                    player.addEffect(new net.minecraft.world.effect.MobEffectInstance(
+                            net.minecraft.world.effect.MobEffects.LEVITATION, 5, 8, false, false, false));
+                }
+
+                CHICKEN_BOMBERS.put(player.getUUID(), ticksLeft - 1);
+            } else {
+                CHICKEN_BOMBERS.remove(player.getUUID());
+                player.getCooldowns().addCooldown(
+                        new net.minecraft.world.item.ItemStack(net.brunodev.smashmobs.SmashMobs.CHICKEN_SUPREME.get()),
+                        1200);
+            }
+        }
+
+        // --- METRALHADORA DE OVOS (BURST) ---
+        if (CHICKEN_MACHINE_GUN_ACTIVE.containsKey(player.getUUID())) {
+            int ticksLeft = CHICKEN_MACHINE_GUN_ACTIVE.get(player.getUUID());
+            if (ticksLeft > 0) {
+                if (ticksLeft % 2 == 0) {
+                    spawnMachineGunEgg(player);
+                }
+                CHICKEN_MACHINE_GUN_ACTIVE.put(player.getUUID(), ticksLeft - 1);
+            } else {
+                CHICKEN_MACHINE_GUN_ACTIVE.remove(player.getUUID());
+            }
+        }
 
         // --- LÓGICA DE ENGOLIR (KIRBY) ---
         if (GOAT_SWALLOWED.containsKey(player.getUUID())) {
@@ -545,16 +646,65 @@ public class AbilityEvents {
     }
 
     // ========================================================
-    // QUEDA DO CREEPER
+    // QUEDA DO CREEPER E EVENTOS EXTRAS
     // ========================================================
+    @SubscribeEvent
+    public static void onLivingKnockback(net.neoforged.neoforge.event.entity.living.LivingKnockBackEvent event) {
+        if (CHICKEN_KNOCKBACK_VULNERABILITY.containsKey(event.getEntity().getUUID())) {
+            event.setStrength(event.getStrength() * 2.0F); // Dobra o repuxo
+        }
+    }
+
+    @SubscribeEvent
+    public static void onProjectileHit(net.neoforged.neoforge.event.entity.ProjectileImpactEvent event) {
+        if (event.getProjectile().getType() == net.minecraft.world.entity.EntityType.EGG) {
+            net.minecraft.world.entity.projectile.Projectile egg = event.getProjectile();
+            if (CHICKEN_BOMBER_EGGS.contains(egg)) {
+                egg.level().explode(egg, egg.getX(), egg.getY(), egg.getZ(), 3.0F, false,
+                        Level.ExplosionInteraction.NONE);
+                egg.level().playSound(null, egg.blockPosition(), net.minecraft.sounds.SoundEvents.CHICKEN_HURT,
+                        net.minecraft.sounds.SoundSource.PLAYERS, 2.0F, 0.5F);
+
+                for (int x = -2; x <= 2; x++) {
+                    for (int z = -2; z <= 2; z++) {
+                        if (Math.random() > 0.5) {
+                            net.minecraft.core.BlockPos pos = egg.blockPosition().offset(x, 0, z);
+                            if (egg.level().getBlockState(pos).isAir()
+                                    && egg.level().getBlockState(pos.below()).isSolidRender()) {
+                                egg.level().setBlock(pos,
+                                        net.minecraft.world.level.block.Blocks.FIRE.defaultBlockState(), 3);
+                            }
+                        }
+                    }
+                }
+                CHICKEN_BOMBER_EGGS.remove(egg);
+            }
+        }
+    }
+
     @SubscribeEvent
     public static void onPlayerFall(LivingFallEvent event) {
         if (event.getEntity() instanceof Player player && !player.level().isClientSide()) {
-            if (CREEPER_ARMED_PLAYERS.contains(player.getUUID())) {
-                CREEPER_ARMED_PLAYERS.remove(player.getUUID());
+            if (CREEPER_ARMED_PLAYERS.contains(player.getUUID()) || CHICKEN_BOMBERS.containsKey(player.getUUID())) {
+                boolean wasCreeper = CREEPER_ARMED_PLAYERS.remove(player.getUUID());
+                if (wasCreeper) {
+                    player.level().explode(player, player.getX(), player.getY(), player.getZ(), 3.0F, false,
+                            Level.ExplosionInteraction.NONE);
+                }
                 event.setCanceled(true);
-                player.level().explode(player, player.getX(), player.getY(), player.getZ(), 3.0F, false,
-                        Level.ExplosionInteraction.NONE);
+            }
+        }
+    }
+
+    @SubscribeEvent
+    public static void onLivingJump(net.neoforged.neoforge.event.entity.living.LivingEvent.LivingJumpEvent event) {
+        if (event.getEntity() instanceof Player player && !player.level().isClientSide()) {
+            // PULO EXTRA DA GALINHA (FLAP)
+            if (CHICKEN_BOMBERS.containsKey(player.getUUID())) {
+                player.setDeltaMovement(player.getDeltaMovement().add(0, 0.8, 0));
+                player.hurtMarked = true;
+                player.level().playSound(null, player.blockPosition(), net.minecraft.sounds.SoundEvents.BAT_TAKEOFF,
+                        net.minecraft.sounds.SoundSource.PLAYERS, 1.0F, 1.0F);
             }
         }
     }
@@ -620,5 +770,27 @@ public class AbilityEvents {
 
         level.playSound(null, player.blockPosition(), GOLEM_SUPREME_SOUND.get(),
                 net.minecraft.sounds.SoundSource.PLAYERS, 2.0F, 0.9F);
+    }
+
+    private static void spawnMachineGunEgg(Player player) {
+        Level level = player.level();
+        if (!level.isClientSide()) {
+            level.playSound(null, player.blockPosition(), net.minecraft.sounds.SoundEvents.CHICKEN_EGG,
+                    net.minecraft.sounds.SoundSource.PLAYERS, 1.0F, 1.5F);
+
+            net.minecraft.world.entity.projectile.ThrowableProjectile egg = (net.minecraft.world.entity.projectile.ThrowableProjectile) net.minecraft.world.entity.EntityType.EGG
+                    .create(level, net.minecraft.world.entity.EntitySpawnReason.TRIGGERED);
+
+            if (egg != null) {
+                egg.setPos(player.getX(), player.getEyeY() - 0.1, player.getZ());
+                egg.setOwner(player);
+                egg.shootFromRotation(player, player.getXRot(), player.getYRot(), 0.0F, 2.0F, 14.0F);
+                level.addFreshEntity(egg);
+
+                level.playSound(null, player.blockPosition(), net.minecraft.sounds.SoundEvents.EGG_THROW,
+                        net.minecraft.sounds.SoundSource.PLAYERS, 0.5F,
+                        1.2F + (level.getRandom().nextFloat() * 0.5f));
+            }
+        }
     }
 }
