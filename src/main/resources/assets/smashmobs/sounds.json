@@ -11,10 +11,17 @@
     "sounds": [
       "smashmobs:golem_throw_anvil"
     ]
-  },"golem_supreme": {
+  },
+  "golem_supreme": {
     "category": "player",
     "sounds": [
       "smashmobs:golem_supreme"
+    ]
+  },
+  "skelleton_shoot": {
+    "category": "player",
+    "sounds": [
+      "smashmobs:skelleton_shoot"
     ]
   },
   "pick_mob": {

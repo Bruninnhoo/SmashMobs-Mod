@@ -132,7 +132,7 @@ public class SmashMobs {
         // =-=-=-==-= CHICKEN =-=-=-==-=
         public static final DeferredItem<ChickenTrapItem> CHICKEN_TRAP = ITEMS.registerItem(
                         "chicken_trap", p -> new ChickenTrapItem(p.stacksTo(1)));
-        
+
         public static final DeferredItem<ChickenMachineGunItem> CHICKEN_MACHINE_GUN = ITEMS.registerItem(
                         "chicken_machine_gun", p -> new ChickenMachineGunItem(p.stacksTo(1)));
 
@@ -142,6 +142,9 @@ public class SmashMobs {
         // =-=-=-==-= SKELETON =-=-=-==-=
         public static final DeferredItem<SkeletonSniperItem> SKELETON_SNIPER = ITEMS.registerItem(
                         "skeleton_sniper", p -> new SkeletonSniperItem(p.stacksTo(1)));
+
+        public static final Supplier<SoundEvent> SKELETON_SHOOT_SOUND = SOUNDS.register("skelleton_shoot",
+                        SoundEvent::createVariableRangeEvent);
 
         /*
          * ==================================================================

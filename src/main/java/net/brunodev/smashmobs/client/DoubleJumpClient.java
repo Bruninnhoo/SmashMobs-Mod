@@ -16,6 +16,7 @@ public class DoubleJumpClient {
 
     private static int jumpCount = 0; // 0 = no chão, 1 = primeiro pulo, 2 = pulo duplo
     private static boolean wasJumping = false;
+    private static float jumpTimer = 0.0F;
 
     @SubscribeEvent
     public static void onClientTick(ClientTickEvent.Post event) {
@@ -30,6 +31,10 @@ public class DoubleJumpClient {
         int lives = player.getData(net.brunodev.smashmobs.registration.ModAttachments.PLAYER_LIVES);
         if (lives <= 0) {
             return;
+        }
+
+        if (jumpTimer > 0) {
+            jumpTimer--;
         }
 
         // 1. RESET: Se encostou no chão, o contador volta a zero
@@ -49,13 +54,17 @@ public class DoubleJumpClient {
             jumpCount++;
 
             if (jumpCount == 2) {
-                // --- O PULO DUPLO SÓ ACONTECE NO SEGUNDO APERTO ---
+                if (jumpTimer > 0) {
+                    jumpCount = 1; // Cancela o pulo duplo e permite tentar de novo se o tempo acabar ainda no ar
+                } else {
+                    // --- O PULO DUPLO SÓ ACONTECE NO SEGUNDO APERTO ---
+                    jumpTimer = 20; // 1 segundo de cooldown após um duplo pulo (20 ticks)
 
-                Vec3 currentMotion = player.getDeltaMovement();
-                // 0.5D é uma altura ótima para double jump (nem muito alto, nem muito baixo)
-                player.setDeltaMovement(currentMotion.x * 1.4, 1.5D, currentMotion.z * 1.4);
+                    Vec3 currentMotion = player.getDeltaMovement();
+                    // 0.5D é uma altura ótima para double jump (nem muito alto, nem muito baixo)
+                    player.setDeltaMovement(currentMotion.x * 1.4, 1.5D, currentMotion.z * 1.4);
 
-                player.fallDistance = 0.0F;
+                    player.fallDistance = 0.0F;
 
                 // Efeitos para dar o "feeling" de Smash
                 player.level().playSound(player, player.blockPosition(), SoundEvents.PLAYER_ATTACK_SWEEP,
@@ -67,6 +76,7 @@ public class DoubleJumpClient {
                             player.getY() + 0.1,
                             player.getZ() + (Math.random() - 0.5),
                             0, -0.05, 0);
+                }
                 }
             }
         }

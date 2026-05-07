@@ -81,12 +81,17 @@ public class AbilityEvents {
             net.minecraft.world.entity.Entity targetEntity = sl.getEntity(GOAT_SWALLOWED.get(goatId));
 
             if (targetEntity instanceof LivingEntity victim && victim.isAlive()) {
+                // Teleporta de volta para a cabra antes de cuspir
+                victim.teleportTo(goat.getX(), goat.getY() + 0.5, goat.getZ());
+                
                 var look = goat.getLookAngle();
                 victim.setDeltaMovement(look.x * 2.0, 0.8, look.z * 2.0);
                 victim.hurt(victim.damageSources().mobAttack(goat), 6.0F);
                 victim.hurtMarked = true;
 
                 victim.removeEffect(MobEffects.INVISIBILITY);
+                victim.removeEffect(MobEffects.BLINDNESS);
+                victim.removeEffect(MobEffects.LEVITATION);
 
                 goat.level().playSound(null, goat.blockPosition(), net.minecraft.sounds.SoundEvents.LLAMA_SPIT,
                         net.minecraft.sounds.SoundSource.PLAYERS, 2.0F, 1.0F);
@@ -565,10 +570,17 @@ public class AbilityEvents {
 
                 if (targetEntity instanceof LivingEntity victim && victim.isAlive() && ticksLeft > 0) {
 
-                    victim.teleportTo(player.getX(), player.getY(), player.getZ());
+                    // Manda a vítima lá para o alto para ela não conseguir bater na cabra
+                    victim.teleportTo(player.getX(), player.getY() + 100, player.getZ());
                     victim.setDeltaMovement(0, 0, 0);
+                    victim.fallDistance = 0;
+                    
                     victim.addEffect(new net.minecraft.world.effect.MobEffectInstance(
-                            net.minecraft.world.effect.MobEffects.INVISIBILITY, 2, 0, false, false, false));
+                            net.minecraft.world.effect.MobEffects.INVISIBILITY, 10, 0, false, false, false));
+                    victim.addEffect(new net.minecraft.world.effect.MobEffectInstance(
+                            net.minecraft.world.effect.MobEffects.BLINDNESS, 10, 0, false, false, false));
+                    victim.addEffect(new net.minecraft.world.effect.MobEffectInstance(
+                            net.minecraft.world.effect.MobEffects.LEVITATION, 10, 255, false, false, false)); // Mantém ela parada no ar
 
                     if (ticksLeft % 10 == 0) {
                         victim.hurt(victim.damageSources().magic(), 1.0F);
@@ -669,8 +681,16 @@ public class AbilityEvents {
                 lives--; // Perde uma vida
 
                 player.setData(net.brunodev.smashmobs.registration.ModAttachments.PLAYER_LIVES, lives);
-                player.setData(net.brunodev.smashmobs.registration.ModAttachments.DAMAGE_PERCENT, 0.0f); // Reseta
-                                                                                                         // porcentagem
+                player.setData(net.brunodev.smashmobs.registration.ModAttachments.DAMAGE_PERCENT, 0.0f); // Reseta porcentagem
+                
+                // ATUALIZA O SCOREBOARD PARA 0
+                if (player.level().getServer() != null) {
+                    net.minecraft.world.scores.Scoreboard scoreboard = player.level().getServer().getScoreboard();
+                    net.minecraft.world.scores.Objective obj = scoreboard.getObjective("smash_percent");
+                    if (obj != null) {
+                        scoreboard.getOrCreatePlayerScore(player, obj).set(0);
+                    }
+                }
 
                 if (player instanceof net.minecraft.server.level.ServerPlayer serverPlayer) {
                     if (lives > 0) {
@@ -700,6 +720,15 @@ public class AbilityEvents {
             // Aumenta a porcentagem baseado no dano original
             float newPercent = currentPercent + (event.getOriginalDamage() * 3.0f); // Cada 1 de dano dá 3%
             player.setData(net.brunodev.smashmobs.registration.ModAttachments.DAMAGE_PERCENT, newPercent);
+            
+            // ATUALIZA O SCOREBOARD VISUAL
+            if (player.level().getServer() != null) {
+                net.minecraft.world.scores.Scoreboard scoreboard = player.level().getServer().getScoreboard();
+                net.minecraft.world.scores.Objective obj = scoreboard.getObjective("smash_percent");
+                if (obj != null) {
+                    scoreboard.getOrCreatePlayerScore(player, obj).set((int) newPercent);
+                }
+            }
 
             // Cancela o dano para o jogador não morrer
             event.setNewDamage(0.001f); // Dano quase nulo para tocar som e animação de piscar vermelho
@@ -795,6 +824,13 @@ public class AbilityEvents {
                 player.level().playSound(null, player.blockPosition(), net.minecraft.sounds.SoundEvents.BAT_TAKEOFF,
                         net.minecraft.sounds.SoundSource.PLAYERS, 1.0F, 1.0F);
             }
+        }
+    }
+
+    @SubscribeEvent
+    public static void onLivingDeath(net.neoforged.neoforge.event.entity.living.LivingDeathEvent event) {
+        if (event.getEntity() instanceof Player player) {
+            spitSwallowedEntity(player); // Se o jogador engoliu alguém e morreu, ele cospe a vítima
         }
     }
 

@@ -6,6 +6,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
+import net.brunodev.smashmobs.SmashMobs;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 
@@ -46,7 +47,7 @@ public class SkeletonSniperItem extends Item {
             level.playSound(null, player.getX(), player.getY(), player.getZ(),
                     SoundEvents.SKELETON_SHOOT, SoundSource.PLAYERS, 1.5F, 0.5F); // Som grave pra parecer um sniper
             level.playSound(null, player.getX(), player.getY(), player.getZ(),
-                    SoundEvents.CROSSBOW_SHOOT, SoundSource.PLAYERS, 1.0F, 1.5F);
+                    SmashMobs.SKELETON_SHOOT_SOUND.get(), SoundSource.PLAYERS, 1.0F, 1.5F);
 
             // Cooldown de 4 segundos (80 ticks) para não metralhar
             player.getCooldowns().addCooldown(itemstack, 80);

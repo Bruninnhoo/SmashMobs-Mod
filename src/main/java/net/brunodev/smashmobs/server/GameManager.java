@@ -5,6 +5,10 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.level.GameType;
+import net.minecraft.world.scores.Objective;
+import net.minecraft.world.scores.Scoreboard;
+import net.minecraft.world.scores.criteria.ObjectiveCriteria;
+import net.minecraft.world.scores.DisplaySlot;
 
 public class GameManager {
 
@@ -14,10 +18,14 @@ public class GameManager {
     // Método para dar a largada!
     public static void startGame(Iterable<ServerPlayer> players) {
         isGameRunning = true;
-
-
+        
+        MinecraftServer server = null;
 
         for (ServerPlayer player : players) {
+            if (server == null) {
+                server = player.level().getServer();
+            }
+            
             // Seta os status de todos
             player.setData(ModAttachments.PLAYER_LIVES, 3);
             player.setData(ModAttachments.DAMAGE_PERCENT, 0.0f);
@@ -35,6 +43,20 @@ public class GameManager {
 
             player.teleportTo(0, 100, 0);
         }
+        
+        if (server != null) {
+            Scoreboard scoreboard = server.getScoreboard();
+            Objective objective = scoreboard.getObjective("smash_percent");
+            if (objective == null) {
+                objective = scoreboard.addObjective("smash_percent", ObjectiveCriteria.DUMMY, Component.literal("Dano %"), ObjectiveCriteria.RenderType.INTEGER, true, null);
+            }
+            scoreboard.setDisplayObjective(DisplaySlot.BELOW_NAME, objective);
+            
+            // Reseta a pontuação visual de todo mundo
+            for (ServerPlayer player : players) {
+                scoreboard.getOrCreatePlayerScore(player, objective).set(0);
+            }
+        }
     }
 
     // Método para finalizar o jogo
@@ -49,5 +71,21 @@ public class GameManager {
             player.setData(ModAttachments.PLAYER_LIVES, 0);
             player.setData(ModAttachments.DAMAGE_PERCENT, 0.0f);
         }
+
+        // Limpa as minas da galinha
+        for (net.minecraft.world.entity.item.ItemEntity mine : net.brunodev.smashmobs.server.AbilityEvents.CHICKEN_MINES.keySet()) {
+            if (mine != null && mine.isAlive()) {
+                mine.discard(); // Deleta a mina do mundo
+            }
+        }
+        net.brunodev.smashmobs.server.AbilityEvents.CHICKEN_MINES.clear();
+        
+        // Limpa bigornas
+        for (net.minecraft.world.entity.item.FallingBlockEntity anvil : net.brunodev.smashmobs.server.AbilityEvents.FLYING_ANVILS.keySet()) {
+            if (anvil != null && anvil.isAlive()) {
+                anvil.discard();
+            }
+        }
+        net.brunodev.smashmobs.server.AbilityEvents.FLYING_ANVILS.clear();
     }
 }
