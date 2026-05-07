@@ -25,8 +25,6 @@ import java.util.WeakHashMap;
 public class ClientEvents {
 
     private static final WeakHashMap<UUID, LivingEntity> mobCache = new WeakHashMap<>();
-    private static int jumpCount = 0;
-    private static boolean wasJumping = false;
 
     // =========================================================================
     // RENDERIZAÇÃO E MORPHS
@@ -227,33 +225,7 @@ public class ClientEvents {
             mc.setScreen(new net.brunodev.smashmobs.client.MorphSelectionScreen());
         }
 
-        // Pulo Duplo
-        if (player.onGround() || player.onClimbable()) {
-            jumpCount = 0;
-            wasJumping = mc.options.keyJump.isDown();
-            return;
-        }
 
-        boolean isJumping = mc.options.keyJump.isDown();
-
-        if (isJumping && !wasJumping) {
-            jumpCount++;
-            if (jumpCount == 2) {
-                Vec3 currentMotion = player.getDeltaMovement();
-                player.setDeltaMovement(currentMotion.x * 2.0, 1.0D, currentMotion.z * 2.0);
-                player.fallDistance = 0.0F;
-                player.level().playSound(player, player.blockPosition(), SoundEvents.PLAYER_ATTACK_SWEEP,
-                        SoundSource.PLAYERS, 1.0F, 2.0F);
-
-                for (int i = 0; i < 6; i++) {
-                    player.level().addParticle(ParticleTypes.CLOUD,
-                            player.getX() + (Math.random() - 0.5), player.getY() + 0.1,
-                            player.getZ() + (Math.random() - 0.5),
-                            0, -0.05, 0);
-                }
-            }
-        }
-        wasJumping = isJumping;
     }
 
     // Gatilho oficial do GeckoLib!

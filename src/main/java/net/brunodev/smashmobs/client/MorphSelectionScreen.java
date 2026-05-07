@@ -15,6 +15,7 @@ public class MorphSelectionScreen extends Screen {
     private Button ironGolemButton;
     private Button goatButton;
     private Button chickenButton;
+    private Button skeletonButton;
 
     public MorphSelectionScreen() {
         super(Component.literal("Selecione seu Mob"));
@@ -25,9 +26,9 @@ public class MorphSelectionScreen extends Screen {
         int centerX = this.width / 2;
         int centerY = this.height / 2;
 
-        // Calculamos a posição inicial para centralizar 4 botões de 40px com 10px de espaço
-        // Total = (4 * 40) + (3 * 10) = 190px
-        int startX = centerX - 95;
+        // Calculamos a posição inicial para centralizar 5 botões de 40px com 10px de espaço
+        // Total = (5 * 40) + (4 * 10) = 240px
+        int startX = centerX - 120;
 
         // --- BOTÃO DO CREEPER ---
         this.creeperButton = Button.builder(Component.empty(), (btn) -> {
@@ -74,7 +75,6 @@ public class MorphSelectionScreen extends Screen {
         this.goatButton.setAlpha(0.0F);
         this.addRenderableWidget(goatButton);
 
-        // --- BOTÃO CHICKEN ---
         this.chickenButton = Button.builder(Component.empty(), (btn) -> {
             if (net.minecraft.client.Minecraft.getInstance().getConnection() != null) {
                 net.minecraft.client.Minecraft.getInstance().getConnection().send(
@@ -88,6 +88,21 @@ public class MorphSelectionScreen extends Screen {
                 .build();
         this.chickenButton.setAlpha(0.0F);
         this.addRenderableWidget(chickenButton);
+
+        // --- BOTÃO SKELETON ---
+        this.skeletonButton = Button.builder(Component.empty(), (btn) -> {
+            if (net.minecraft.client.Minecraft.getInstance().getConnection() != null) {
+                net.minecraft.client.Minecraft.getInstance().getConnection().send(
+                        new net.minecraft.network.protocol.common.ServerboundCustomPayloadPacket(
+                                new MorphPacket("skeleton")));
+            }
+            this.onClose();
+        })
+                .bounds(startX + 200, centerY - 20, 40, 40)
+                .tooltip(Tooltip.create(Component.literal("SKELETON SNIPER")))
+                .build();
+        this.skeletonButton.setAlpha(0.0F);
+        this.addRenderableWidget(skeletonButton);
     }
 
     @Override
@@ -156,5 +171,17 @@ public class MorphSelectionScreen extends Screen {
             graphics.fill(chx, chy, chx + 40, chy + 40, 0xAA000000);
         }
         graphics.renderItem(new ItemStack(Items.EGG), chx + 12, chy + 12);
+
+        // --- VISUAL SKELETON ---
+        int skx = this.skeletonButton.getX();
+        int sky = this.skeletonButton.getY();
+
+        if (this.skeletonButton.isHovered()) {
+            graphics.fill(skx - 2, sky - 2, skx + 42, sky + 42, 0xFFFFFFFF);
+            graphics.fill(skx, sky, skx + 40, sky + 40, 0xAAEEEEEE); // Branco/Cinza clarinho
+        } else {
+            graphics.fill(skx, sky, skx + 40, sky + 40, 0xAA000000);
+        }
+        graphics.renderItem(new ItemStack(Items.BOW), skx + 12, sky + 12);
     }
 }

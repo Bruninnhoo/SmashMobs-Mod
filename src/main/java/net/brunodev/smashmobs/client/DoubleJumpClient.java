@@ -19,11 +19,18 @@ public class DoubleJumpClient {
 
     @SubscribeEvent
     public static void onClientTick(ClientTickEvent.Post event) {
+
         Minecraft mc = Minecraft.getInstance();
         LocalPlayer player = mc.player;
 
         if (player == null)
             return;
+
+        // Verifica se o jogo começou e o jogador está vivo (Vidas > 0)
+        int lives = player.getData(net.brunodev.smashmobs.registration.ModAttachments.PLAYER_LIVES);
+        if (lives <= 0) {
+            return;
+        }
 
         // 1. RESET: Se encostou no chão, o contador volta a zero
         if (player.onGround() || player.onClimbable()) {
@@ -66,4 +73,5 @@ public class DoubleJumpClient {
 
         wasJumping = isJumping;
     }
+
 }

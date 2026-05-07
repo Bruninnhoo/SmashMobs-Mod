@@ -139,6 +139,10 @@ public class SmashMobs {
         public static final DeferredItem<ChickenUltItem> CHICKEN_SUPREME = ITEMS.registerItem(
                         "chicken_supreme", p -> new ChickenUltItem(p.stacksTo(1)));
 
+        // =-=-=-==-= SKELETON =-=-=-==-=
+        public static final DeferredItem<SkeletonSniperItem> SKELETON_SNIPER = ITEMS.registerItem(
+                        "skeleton_sniper", p -> new SkeletonSniperItem(p.stacksTo(1)));
+
         /*
          * ==================================================================
          * TAB CRIATIVA
@@ -185,6 +189,7 @@ public class SmashMobs {
                         event.accept(CREEPER_EXPLOSION);
                         event.accept(CREEPER_THROW_TNT);
                         event.accept(CREEPER_SUPREME);
+                        event.accept(SKELETON_SNIPER);
                 }
         }
 

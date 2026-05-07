@@ -5,6 +5,7 @@ import net.brunodev.smashmobs.mobs.CreeperClass;
 import net.brunodev.smashmobs.mobs.GoatClass;
 import net.brunodev.smashmobs.mobs.IronGolemClass;
 import net.brunodev.smashmobs.mobs.ChickenClass;
+import net.brunodev.smashmobs.mobs.SkeletonClass;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
@@ -37,6 +38,8 @@ public class ModNetwork {
                             new GoatClass().equip(player);
                         } else if ("chicken".equals(payload.mobType())) {
                             new ChickenClass().equip(player);
+                        } else if ("skeleton".equals(payload.mobType())) {
+                            new SkeletonClass().equip(player);
                         }
                     });
                 });

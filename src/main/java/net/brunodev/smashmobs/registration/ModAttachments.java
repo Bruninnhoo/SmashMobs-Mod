@@ -30,7 +30,7 @@ public class ModAttachments {
                                         .build());
 
         public static final Supplier<AttachmentType<Integer>> PLAYER_LIVES = ATTACHMENT_TYPES.register(
-                        "player_lives", () -> AttachmentType.builder(() -> 3) // Começa com 3 vidas
+                        "player_lives", () -> AttachmentType.builder(() -> 0) // Começa com 0 vidas (só ganha quando iniciar o jogo)
                                         .serialize(com.mojang.serialization.Codec.INT.fieldOf("value"), i -> true)
                                         .copyOnDeath()
                                         .sync(ByteBufCodecs.INT)
