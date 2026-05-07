@@ -10,7 +10,6 @@ import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.client.event.ClientTickEvent;
-import net.neoforged.neoforge.event.entity.living.LivingFallEvent;
 
 @EventBusSubscriber(modid = "smashmobs", value = Dist.CLIENT)
 public class DoubleJumpClient {
@@ -23,7 +22,8 @@ public class DoubleJumpClient {
         Minecraft mc = Minecraft.getInstance();
         LocalPlayer player = mc.player;
 
-        if (player == null) return;
+        if (player == null)
+            return;
 
         // 1. RESET: Se encostou no chão, o contador volta a zero
         if (player.onGround() || player.onClimbable()) {
@@ -51,9 +51,10 @@ public class DoubleJumpClient {
                 player.fallDistance = 0.0F;
 
                 // Efeitos para dar o "feeling" de Smash
-                player.level().playSound(player, player.blockPosition(), SoundEvents.PLAYER_ATTACK_SWEEP, SoundSource.PLAYERS, 1.0F, 2.0F);
+                player.level().playSound(player, player.blockPosition(), SoundEvents.PLAYER_ATTACK_SWEEP,
+                        SoundSource.PLAYERS, 1.0F, 2.0F);
 
-                for(int i = 0; i < 6; i++) {
+                for (int i = 0; i < 6; i++) {
                     player.level().addParticle(ParticleTypes.CLOUD,
                             player.getX() + (Math.random() - 0.5),
                             player.getY() + 0.1,

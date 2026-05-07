@@ -655,6 +655,77 @@ public class AbilityEvents {
         }
     }
 
+    // ========================================================
+    // LÓGICA DE DANO TIPO SMASH BROS (PORCENTAGEM)
+    // ========================================================
+    @SubscribeEvent
+    public static void onPlayerDamage(net.neoforged.neoforge.event.entity.living.LivingDamageEvent.Pre event) {
+        if (event.getEntity() instanceof Player player && !player.level().isClientSide()) {
+            // 1. TRATAMENTO DE QUEDA NO VOID (Morte do Smash)
+            if (event.getSource().is(net.minecraft.world.damagesource.DamageTypes.FELL_OUT_OF_WORLD)) {
+                event.setNewDamage(0.0f); // Evita a morte padrão do Minecraft (cancela o dano real)
+
+                int lives = player.getData(net.brunodev.smashmobs.registration.ModAttachments.PLAYER_LIVES);
+                lives--; // Perde uma vida
+
+                player.setData(net.brunodev.smashmobs.registration.ModAttachments.PLAYER_LIVES, lives);
+                player.setData(net.brunodev.smashmobs.registration.ModAttachments.DAMAGE_PERCENT, 0.0f); // Reseta
+                                                                                                         // porcentagem
+
+                if (player instanceof net.minecraft.server.level.ServerPlayer serverPlayer) {
+                    if (lives > 0) {
+                        serverPlayer.sendSystemMessage(
+                                net.minecraft.network.chat.Component.literal("§cVocê caiu! Vidas restantes: " + lives));
+                        serverPlayer.teleportTo(0, 100, 0);
+                        serverPlayer.setDeltaMovement(0, 0, 0);
+                        serverPlayer.fallDistance = 0;
+                        serverPlayer.setHealth(serverPlayer.getMaxHealth());
+                    } else {
+                        serverPlayer.sendSystemMessage(
+                                net.minecraft.network.chat.Component.literal("§4Você foi eliminado!"));
+                        serverPlayer.setGameMode(net.minecraft.world.level.GameType.SPECTATOR);
+                    }
+                }
+                return;
+            }
+
+            // Ignora dano de queda (já tem lógica de cancelar queda no mod)
+            if (event.getSource().is(net.minecraft.tags.DamageTypeTags.IS_FALL)) {
+                return;
+            }
+
+            // Pega a porcentagem atual do jogador
+            float currentPercent = player.getData(net.brunodev.smashmobs.registration.ModAttachments.DAMAGE_PERCENT);
+
+            // Aumenta a porcentagem baseado no dano original
+            float newPercent = currentPercent + (event.getOriginalDamage() * 3.0f); // Cada 1 de dano dá 3%
+            player.setData(net.brunodev.smashmobs.registration.ModAttachments.DAMAGE_PERCENT, newPercent);
+
+            // Cancela o dano para o jogador não morrer
+            event.setNewDamage(0.001f); // Dano quase nulo para tocar som e animação de piscar vermelho
+
+            // Aplica repulsão extra (Knockback)
+            net.minecraft.world.entity.Entity attacker = event.getSource().getEntity();
+            if (attacker != null) {
+                double dx = player.getX() - attacker.getX();
+                double dz = player.getZ() - attacker.getZ();
+
+                // Quanto maior a porcentagem, maior a força (multiplicador)
+                double knockbackStrength = 0.5 + (newPercent / 50.0);
+
+                player.knockback(knockbackStrength, -dx, -dz);
+
+                // Adiciona um empurrão para cima baseado na porcentagem (Smash Bros style)
+                player.setDeltaMovement(player.getDeltaMovement().add(0, 0.1 + (newPercent / 300.0), 0));
+                player.hurtMarked = true;
+            }
+
+            // Toca um som de pancada para avisar o acerto
+            player.level().playSound(null, player.blockPosition(), net.minecraft.sounds.SoundEvents.PLAYER_ATTACK_CRIT,
+                    net.minecraft.sounds.SoundSource.PLAYERS, 1.0F, 1.2F);
+        }
+    }
+
     @SubscribeEvent
     public static void onProjectileHit(net.neoforged.neoforge.event.entity.ProjectileImpactEvent event) {
         if (event.getProjectile().getType() == net.minecraft.world.entity.EntityType.EGG) {
@@ -678,6 +749,24 @@ public class AbilityEvents {
                     }
                 }
                 CHICKEN_BOMBER_EGGS.remove(egg);
+                
+                // Remove o ovo e cancela para NÃO nascer pintinhos
+                egg.discard();
+                event.setCanceled(true);
+            } else if (egg.getOwner() instanceof Player owner) {
+                // É um ovo atirado pela Machine Gun (ou jogado na mão)
+                var hitResult = event.getRayTraceResult();
+                if (hitResult.getType() == net.minecraft.world.phys.HitResult.Type.ENTITY) {
+                    net.minecraft.world.phys.EntityHitResult entityHit = (net.minecraft.world.phys.EntityHitResult) hitResult;
+                    if (entityHit.getEntity() instanceof net.minecraft.world.entity.LivingEntity victim && victim != owner) {
+                        // Aplica o dano da metralhadora (1.0 = meio coração por ovo)
+                        victim.hurt(victim.damageSources().thrown(egg, owner), 1.0F);
+                    }
+                }
+                
+                // Remove o ovo e cancela para NÃO nascer pintinhos
+                egg.discard();
+                event.setCanceled(true);
             }
         }
     }

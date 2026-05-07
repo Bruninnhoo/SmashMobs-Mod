@@ -22,4 +22,18 @@ public class ModAttachments {
                                         .sync(ByteBufCodecs.STRING_UTF8)
                                         .build());
 
+        public static final Supplier<AttachmentType<Float>> DAMAGE_PERCENT = ATTACHMENT_TYPES.register(
+                        "damage_percent", () -> AttachmentType.builder(() -> 0.0f)
+                                        .serialize(com.mojang.serialization.Codec.FLOAT.fieldOf("value"), f -> true)
+                                        .copyOnDeath()
+                                        .sync(ByteBufCodecs.FLOAT)
+                                        .build());
+
+        public static final Supplier<AttachmentType<Integer>> PLAYER_LIVES = ATTACHMENT_TYPES.register(
+                        "player_lives", () -> AttachmentType.builder(() -> 3) // Começa com 3 vidas
+                                        .serialize(com.mojang.serialization.Codec.INT.fieldOf("value"), i -> true)
+                                        .copyOnDeath()
+                                        .sync(ByteBufCodecs.INT)
+                                        .build());
+
 }

@@ -17,7 +17,9 @@ public class KeyBindings {
             "key.smashmobs.morph_menu",
             InputConstants.Type.KEYSYM,
             org.lwjgl.glfw.GLFW.GLFW_KEY_K, // O SEGREDO 2: O código certo da Tecla K
-            KeyMapping.Category.register(Identifier.parse("key.categories.smashmobs")) // O SEGREDO 3: A sua categoria que cria o objeto correto (pode ignorar o Deprecated!)
+            KeyMapping.Category.register(Identifier.parse("key.categories.smashmobs")) // O SEGREDO 3: A sua categoria
+                                                                                       // que cria o objeto correto
+                                                                                       // (pode ignorar o Deprecated!)
     );
 
     @SubscribeEvent

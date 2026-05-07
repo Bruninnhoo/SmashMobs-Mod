@@ -74,9 +74,11 @@ public class ClientEvents {
             LivingEntity cachedEntity = mobCache.get(player.getUUID());
 
             if (!(cachedEntity instanceof net.brunodev.smashmobs.entity.IronGolemMorph)) {
-                if (cachedEntity != null) cachedEntity.discard(); // Limpa se era outro mob
+                if (cachedEntity != null)
+                    cachedEntity.discard(); // Limpa se era outro mob
 
-                cachedEntity = new net.brunodev.smashmobs.entity.IronGolemMorph(net.brunodev.smashmobs.SmashMobs.IRON_GOLEM_MORPH.get(), player.level());
+                cachedEntity = new net.brunodev.smashmobs.entity.IronGolemMorph(
+                        net.brunodev.smashmobs.SmashMobs.IRON_GOLEM_MORPH.get(), player.level());
 
                 // Dá um ID único e coloca no mundo para as animações funcionarem!
                 cachedEntity.setId(-Math.abs(player.getUUID().hashCode()));
@@ -113,7 +115,8 @@ public class ClientEvents {
             dummyGolem.isPlayerMoving = (dx * dx + dz * dz) > 0.0001;
 
             // Esconde se for a sua própria câmera em 1ª pessoa
-            if (player == Minecraft.getInstance().player && Minecraft.getInstance().options.getCameraType().isFirstPerson()) {
+            if (player == Minecraft.getInstance().player
+                    && Minecraft.getInstance().options.getCameraType().isFirstPerson()) {
                 dummyGolem.setInvisible(true);
             } else {
                 dummyGolem.setInvisible(false);
@@ -173,12 +176,11 @@ public class ClientEvents {
                 var genericRenderer = dispatcher.getRenderer(cachedMob);
 
                 if (genericRenderer instanceof net.minecraft.client.renderer.entity.LivingEntityRenderer) {
-                    @SuppressWarnings({"rawtypes", "unchecked"})
-                    net.minecraft.client.renderer.entity.LivingEntityRenderer renderer =
-                            (net.minecraft.client.renderer.entity.LivingEntityRenderer) genericRenderer;
+                    @SuppressWarnings({ "rawtypes", "unchecked" })
+                    net.minecraft.client.renderer.entity.LivingEntityRenderer renderer = (net.minecraft.client.renderer.entity.LivingEntityRenderer) genericRenderer;
 
-                    net.minecraft.client.renderer.entity.state.LivingEntityRenderState mobState =
-                            (net.minecraft.client.renderer.entity.state.LivingEntityRenderState) renderer.createRenderState();
+                    net.minecraft.client.renderer.entity.state.LivingEntityRenderState mobState = (net.minecraft.client.renderer.entity.state.LivingEntityRenderState) renderer
+                            .createRenderState();
 
                     renderer.extractRenderState(cachedMob, mobState, event.getPartialTick());
                     AvatarRenderState playerState = (AvatarRenderState) event.getRenderState();
@@ -186,7 +188,8 @@ public class ClientEvents {
                     mobState.walkAnimationPos = playerState.walkAnimationPos;
                     mobState.walkAnimationSpeed = playerState.walkAnimationSpeed;
 
-                    renderer.submit(mobState, event.getPoseStack(), event.getSubmitNodeCollector(), Minecraft.getInstance().gameRenderer.getLevelRenderState().cameraRenderState);
+                    renderer.submit(mobState, event.getPoseStack(), event.getSubmitNodeCollector(),
+                            Minecraft.getInstance().gameRenderer.getLevelRenderState().cameraRenderState);
                 }
             }
         }
@@ -200,7 +203,8 @@ public class ClientEvents {
         Minecraft mc = Minecraft.getInstance();
         LocalPlayer player = mc.player;
 
-        if (player == null) return;
+        if (player == null)
+            return;
 
         // =========================================================================
         // O CONSERTO DA PRIMEIRA PESSOA (Roda o tempo todo, nunca trava!)
@@ -238,18 +242,19 @@ public class ClientEvents {
                 Vec3 currentMotion = player.getDeltaMovement();
                 player.setDeltaMovement(currentMotion.x * 2.0, 1.0D, currentMotion.z * 2.0);
                 player.fallDistance = 0.0F;
-                player.level().playSound(player, player.blockPosition(), SoundEvents.PLAYER_ATTACK_SWEEP, SoundSource.PLAYERS, 1.0F, 2.0F);
+                player.level().playSound(player, player.blockPosition(), SoundEvents.PLAYER_ATTACK_SWEEP,
+                        SoundSource.PLAYERS, 1.0F, 2.0F);
 
-                for(int i = 0; i < 6; i++) {
+                for (int i = 0; i < 6; i++) {
                     player.level().addParticle(ParticleTypes.CLOUD,
-                            player.getX() + (Math.random() - 0.5), player.getY() + 0.1, player.getZ() + (Math.random() - 0.5),
+                            player.getX() + (Math.random() - 0.5), player.getY() + 0.1,
+                            player.getZ() + (Math.random() - 0.5),
                             0, -0.05, 0);
                 }
             }
         }
         wasJumping = isJumping;
     }
-
 
     // Gatilho oficial do GeckoLib!
     public static void playAnvilAnimation(UUID playerId) {

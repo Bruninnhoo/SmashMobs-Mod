@@ -44,6 +44,7 @@ public class ChickenUltItem extends Item {
                     Projectile bomberEgg = EntityType.EGG.create(level,
                             net.minecraft.world.entity.EntitySpawnReason.TRIGGERED);
                     if (bomberEgg instanceof ThrowableProjectile throwProp) {
+                        throwProp.setPos(player.getX(), player.getEyeY() - 0.1, player.getZ());
                         throwProp.setOwner(player);
                         throwProp.shootFromRotation(player, player.getXRot(), player.getYRot(), 0.0F, 1.8F, 0.0F);
                         level.addFreshEntity(throwProp);
