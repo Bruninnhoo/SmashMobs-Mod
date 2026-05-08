@@ -87,5 +87,9 @@ public class GameManager {
             }
         }
         net.brunodev.smashmobs.server.AbilityEvents.FLYING_ANVILS.clear();
+        
+        // Limpa poderes do esqueleto
+        net.brunodev.smashmobs.server.AbilityEvents.FLYING_BONES.clear();
+        net.brunodev.smashmobs.server.AbilityEvents.ARROW_STORMS.clear();
     }
 }

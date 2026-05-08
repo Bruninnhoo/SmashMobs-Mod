@@ -72,6 +72,33 @@ public class AbilityEvents {
     public static final Map<UUID, Integer> CHICKEN_BOMBER_COOLDOWN = new HashMap<>();
     public static final Map<UUID, Integer> CHICKEN_MACHINE_GUN_ACTIVE = new HashMap<>();
 
+    // ====================================
+    // ----------- SKELETON ---------------
+    // ====================================
+    public static class BoomerangBone {
+        public Player owner;
+        public net.minecraft.world.phys.Vec3 pos;
+        public net.minecraft.world.phys.Vec3 direction;
+        public int ticksAlive = 0;
+        public boolean returning = false;
+
+        public BoomerangBone(Player o, net.minecraft.world.phys.Vec3 p, net.minecraft.world.phys.Vec3 d) {
+            owner = o; pos = p; direction = d;
+        }
+    }
+    public static final List<BoomerangBone> FLYING_BONES = new ArrayList<>();
+    
+    public static class ArrowStorm {
+        public Player owner;
+        public net.minecraft.world.phys.Vec3 pos;
+        public int ticksLeft;
+
+        public ArrowStorm(Player o, net.minecraft.world.phys.Vec3 p, int ticks) {
+            owner = o; pos = p; ticksLeft = ticks;
+        }
+    }
+    public static final List<ArrowStorm> ARROW_STORMS = new ArrayList<>();
+
     public static void spitSwallowedEntity(Player goat) {
         UUID goatId = goat.getUUID();
         if (!GOAT_SWALLOWED.containsKey(goatId))
@@ -263,6 +290,97 @@ public class AbilityEvents {
             // Se o gancho viajou mais de 12 blocos e não pegou nada, ele some no ar
             if (hook.distance >= 12.0) {
                 hookIterator.remove();
+            }
+        }
+
+        // 4. RADAR DO BOOMERANG (ESQUELETO)
+        var boneIterator = FLYING_BONES.iterator();
+        while (boneIterator.hasNext()) {
+            BoomerangBone bone = boneIterator.next();
+            if (!bone.owner.isAlive()) {
+                boneIterator.remove();
+                continue;
+            }
+
+            bone.ticksAlive++;
+            double speed = 1.0;
+            
+            if (bone.ticksAlive > 15) {
+                bone.returning = true;
+            }
+            
+            if (bone.returning) {
+                // Direciona o osso de volta pro dono
+                net.minecraft.world.phys.Vec3 toOwner = bone.owner.getEyePosition().subtract(bone.pos).normalize();
+                bone.direction = toOwner;
+                speed = 1.2; // Volta mais rápido
+            }
+
+            net.minecraft.world.phys.Vec3 nextPos = bone.pos.add(bone.direction.scale(speed));
+            
+            // Verifica se voltou pro dono
+            if (bone.returning && bone.pos.distanceTo(bone.owner.getEyePosition()) < 1.5) {
+                bone.owner.level().playSound(null, bone.owner.blockPosition(), net.minecraft.sounds.SoundEvents.ITEM_PICKUP,
+                        net.minecraft.sounds.SoundSource.PLAYERS, 0.5F, 2.0F);
+                boneIterator.remove();
+                continue;
+            }
+
+            // RASTRO VISUAL
+            if (bone.owner.level() instanceof net.minecraft.server.level.ServerLevel sl) {
+                sl.sendParticles(new net.minecraft.core.particles.ItemParticleOption(net.minecraft.core.particles.ParticleTypes.ITEM, new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.BONE)),
+                        bone.pos.x, bone.pos.y, bone.pos.z, 2, 0.1, 0.1, 0.1, 0.0);
+            }
+            
+            var hitBox = new net.minecraft.world.phys.AABB(bone.pos.x - 0.5, bone.pos.y - 0.5, bone.pos.z - 0.5,
+                    bone.pos.x + 0.5, bone.pos.y + 0.5, bone.pos.z + 0.5);
+            var targets = bone.owner.level().getEntitiesOfClass(LivingEntity.class, hitBox,
+                    e -> e != bone.owner && e.isAlive());
+
+            if (!targets.isEmpty()) {
+                LivingEntity hitTarget = targets.get(0);
+                // Evita que hite o mesmo alvo 1000 vezes por tick se estiver parado nele
+                if (bone.ticksAlive % 5 == 0) {
+                    hitTarget.hurt(hitTarget.damageSources().mobAttack(bone.owner), 4.0F);
+                    hitTarget.knockback(0.5, bone.owner.getX() - hitTarget.getX(), bone.owner.getZ() - hitTarget.getZ());
+                    bone.owner.level().playSound(null, hitTarget.blockPosition(), net.minecraft.sounds.SoundEvents.SKELETON_HURT, net.minecraft.sounds.SoundSource.PLAYERS, 1.0F, 1.5F);
+                }
+            }
+            
+            bone.pos = nextPos;
+        }
+
+        // 5. RADAR DA CHUVA DE FLECHAS (ULTIMATE ESQUELETO)
+        var stormIterator = ARROW_STORMS.iterator();
+        while (stormIterator.hasNext()) {
+            ArrowStorm storm = stormIterator.next();
+            if (!storm.owner.isAlive() || storm.ticksLeft <= 0) {
+                stormIterator.remove();
+                continue;
+            }
+            
+            storm.ticksLeft--;
+            
+            if (storm.ticksLeft % 3 == 0) { // Chove a cada 3 ticks
+                if (storm.owner.level() instanceof net.minecraft.server.level.ServerLevel sl) {
+                    double offsetX = (Math.random() - 0.5) * 8.0;
+                    double offsetZ = (Math.random() - 0.5) * 8.0;
+                    
+                    net.minecraft.world.entity.projectile.Projectile arrow = (net.minecraft.world.entity.projectile.Projectile) net.minecraft.world.entity.EntityType.ARROW.create(sl, net.minecraft.world.entity.EntitySpawnReason.COMMAND);
+                    if (arrow != null) {
+                        arrow.setPos(storm.pos.x + offsetX, storm.pos.y + 12.0, storm.pos.z + offsetZ);
+                        arrow.setDeltaMovement(0, -1.5, 0);
+                        // We just rely on standard projectile methods
+                        arrow.setOwner(storm.owner);
+                        sl.addFreshEntity(arrow);
+                    }
+                }
+            }
+            
+            // Efeitos de som
+            if (storm.ticksLeft % 10 == 0) {
+                storm.owner.level().playSound(null, net.minecraft.core.BlockPos.containing(storm.pos), 
+                    net.minecraft.sounds.SoundEvents.SKELETON_SHOOT, net.minecraft.sounds.SoundSource.PLAYERS, 0.5F, 0.5F);
             }
         }
     }
@@ -917,5 +1035,14 @@ public class AbilityEvents {
                         1.2F + (level.getRandom().nextFloat() * 0.5f));
             }
         }
+    }
+
+    // ========================================================
+    // SKELETON - BONE BOOMERANG E ULTIMATE
+    // ========================================================
+    public static void spawnBoomerangBone(Player player) {
+        net.minecraft.world.phys.Vec3 eyePos = player.getEyePosition();
+        net.minecraft.world.phys.Vec3 dir = player.getLookAngle();
+        FLYING_BONES.add(new BoomerangBone(player, eyePos, dir));
     }
 }

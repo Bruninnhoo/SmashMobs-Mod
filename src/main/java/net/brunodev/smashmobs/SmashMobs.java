@@ -143,6 +143,12 @@ public class SmashMobs {
         public static final DeferredItem<SkeletonSniperItem> SKELETON_SNIPER = ITEMS.registerItem(
                         "skeleton_sniper", p -> new SkeletonSniperItem(p.stacksTo(1)));
 
+        public static final DeferredItem<net.brunodev.smashmobs.item.SkeletonBoomerangItem> SKELETON_BOOMERANG = ITEMS.registerItem(
+                        "skeleton_boomerang", p -> new net.brunodev.smashmobs.item.SkeletonBoomerangItem(p.stacksTo(1)));
+
+        public static final DeferredItem<net.brunodev.smashmobs.item.SkeletonUltItem> SKELETON_ULTIMATE = ITEMS.registerItem(
+                        "skeleton_ultimate", p -> new net.brunodev.smashmobs.item.SkeletonUltItem(p.stacksTo(1)));
+
         public static final Supplier<SoundEvent> SKELETON_SHOOT_SOUND = SOUNDS.register("skelleton_shoot",
                         SoundEvent::createVariableRangeEvent);
 
