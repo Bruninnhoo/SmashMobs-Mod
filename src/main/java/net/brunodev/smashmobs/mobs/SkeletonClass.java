@@ -13,8 +13,7 @@ public class SkeletonClass {
 
         // Equipa itens do esqueleto
         player.getInventory().setItem(0, new ItemStack(SmashMobs.SKELETON_SNIPER.get()));
-        player.getInventory().setItem(1, new ItemStack(SmashMobs.SKELETON_BOOMERANG.get()));
-        player.getInventory().setItem(2, new ItemStack(SmashMobs.SKELETON_ULTIMATE.get()));
+        player.getInventory().setItem(1, new ItemStack(SmashMobs.SKELETON_ULTIMATE.get()));
 
         // Seta o capacete para não pegar fogo de dia (ou só por estética)
         player.setItemSlot(net.minecraft.world.entity.EquipmentSlot.HEAD, new ItemStack(Items.SKELETON_SKULL));

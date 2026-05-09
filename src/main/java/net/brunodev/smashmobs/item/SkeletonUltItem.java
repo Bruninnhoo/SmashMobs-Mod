@@ -16,20 +16,29 @@ public class SkeletonUltItem extends Item {
     @Override
     public InteractionResult use(Level level, Player player, InteractionHand hand) {
         if (!level.isClientSide()) {
-            Vec3 look = player.getLookAngle();
-            // Posição alvo (10 blocos na frente)
-            Vec3 target = player.position().add(look.scale(10.0));
+            String streak = AbilityEvents.SKELETON_KILLSTREAK.getOrDefault(player.getUUID(), "arrow_storm");
+            
+            if ("arrow_storm".equals(streak)) {
+                // Para fase de testes, escolhe aleatoriamente um dos 3 COD MW2 Ultimates!
+                String[] testStreaks = {"air_strike", "sentry_gun", "predator_missile"};
+                streak = testStreaks[new java.util.Random().nextInt(testStreaks.length)];
+            } 
+            
+            if ("air_strike".equals(streak)) {
+                AbilityEvents.startAirStrike(player);
+            } 
+            else if ("sentry_gun".equals(streak)) {
+                AbilityEvents.spawnSentryGun(player);
+            } 
+            else if ("predator_missile".equals(streak)) {
+                AbilityEvents.shootPredatorMissile(player);
+            }
 
-            // Inicia a tempestade!
-            AbilityEvents.ARROW_STORMS.add(new AbilityEvents.ArrowStorm(player, target, 100)); // 5 segundos de
-                                                                                               // tempestade
+            // Consome a killstreak e volta para a padrão (Arrow Storm)
+            AbilityEvents.SKELETON_KILLSTREAK.put(player.getUUID(), "arrow_storm");
 
-            // Toca som de invocação
-            level.playSound(null, player.blockPosition(), net.minecraft.sounds.SoundEvents.WITHER_SPAWN,
-                    net.minecraft.sounds.SoundSource.PLAYERS, 0.5F, 1.5F);
-
-            // Cooldown GIGANTE (Últimate)
-            player.getCooldowns().addCooldown(player.getItemInHand(hand), 600); // 30 segundos
+            // Cooldown de 15 segundos (300 ticks) para poder usar a padrão ou outra ganha
+            player.getCooldowns().addCooldown(player.getItemInHand(hand), 300);
         }
         return InteractionResult.SUCCESS;
     }

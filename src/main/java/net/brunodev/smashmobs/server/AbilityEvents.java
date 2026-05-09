@@ -99,6 +99,97 @@ public class AbilityEvents {
     }
     public static final List<ArrowStorm> ARROW_STORMS = new ArrayList<>();
 
+    // COD MW2 KILLSTREAK SYSTEM FOR SKELETON
+    public static final Map<UUID, String> SKELETON_KILLSTREAK = new HashMap<>();
+
+    public static class AirStrike {
+        public Player owner;
+        public net.minecraft.world.phys.Vec3 startPos;
+        public net.minecraft.world.phys.Vec3 direction;
+        public int ticks = 0;
+        public int explosionsLeft = 8;
+
+        public AirStrike(Player o, net.minecraft.world.phys.Vec3 p, net.minecraft.world.phys.Vec3 d) {
+            owner = o; startPos = p; direction = d;
+        }
+    }
+    public static final List<AirStrike> ACTIVE_AIRSTRIKES = new ArrayList<>();
+
+    public static class SentryGun {
+        public Player owner;
+        public net.minecraft.world.entity.decoration.ArmorStand stand;
+        public int ticksLeft = 200; // 10 segundos
+
+        public SentryGun(Player o, net.minecraft.world.entity.decoration.ArmorStand s) {
+            owner = o; stand = s;
+        }
+    }
+    public static final List<SentryGun> ACTIVE_SENTRY_GUNS = new ArrayList<>();
+
+    public static void giveRandomKillstreak(Player player) {
+        String[] streaks = {"air_strike", "sentry_gun", "predator_missile"};
+        String chosen = streaks[new Random().nextInt(streaks.length)];
+        SKELETON_KILLSTREAK.put(player.getUUID(), chosen);
+        
+        String displayName = "";
+        if ("air_strike".equals(chosen)) displayName = "§c§lAIRSTRIKE";
+        else if ("sentry_gun".equals(chosen)) displayName = "§e§lSENTRY GUN";
+        else if ("predator_missile".equals(chosen)) displayName = "§b§lPREDATOR MISSILE";
+        
+        if (player instanceof net.minecraft.server.level.ServerPlayer serverPlayer) {
+            serverPlayer.sendSystemMessage(net.minecraft.network.chat.Component.literal("§6§l[KILLSTREAK] §aVocê ganhou a Ultimate: " + displayName + " §a!"));
+        }
+        player.level().playSound(null, player.blockPosition(), net.minecraft.sounds.SoundEvents.UI_BUTTON_CLICK.value(), net.minecraft.sounds.SoundSource.PLAYERS, 1.0F, 1.5F);
+    }
+
+    public static void startAirStrike(Player player) {
+        net.minecraft.world.phys.Vec3 start = player.position().add(player.getLookAngle().scale(3.0));
+        net.minecraft.world.phys.Vec3 dir = new net.minecraft.world.phys.Vec3(player.getLookAngle().x, 0, player.getLookAngle().z).normalize();
+        ACTIVE_AIRSTRIKES.add(new AirStrike(player, start, dir));
+        
+        player.level().playSound(null, player.blockPosition(), net.minecraft.sounds.SoundEvents.ENDER_DRAGON_GROWL, net.minecraft.sounds.SoundSource.PLAYERS, 2.0F, 0.5F);
+        if (player instanceof net.minecraft.server.level.ServerPlayer serverPlayer) {
+            serverPlayer.sendSystemMessage(net.minecraft.network.chat.Component.literal("§c§l[KILLSTREAK] §fAirstrike inbound!"));
+        }
+    }
+
+    public static void spawnSentryGun(Player player) {
+        Level level = player.level();
+        net.minecraft.world.entity.decoration.ArmorStand stand = new net.minecraft.world.entity.decoration.ArmorStand(level, player.getX(), player.getY(), player.getZ());
+        
+        stand.setCustomName(net.minecraft.network.chat.Component.literal("§6§lSENTRY GUN"));
+        stand.setCustomNameVisible(true);
+        stand.setNoGravity(true);
+        stand.setItemSlot(net.minecraft.world.entity.EquipmentSlot.HEAD, new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.DISPENSER));
+        stand.setItemSlot(net.minecraft.world.entity.EquipmentSlot.MAINHAND, new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.BOW));
+        
+        level.addFreshEntity(stand);
+        ACTIVE_SENTRY_GUNS.add(new SentryGun(player, stand));
+        
+        level.playSound(null, player.blockPosition(), net.minecraft.sounds.SoundEvents.ANVIL_USE, net.minecraft.sounds.SoundSource.PLAYERS, 1.0F, 1.0F);
+        if (player instanceof net.minecraft.server.level.ServerPlayer serverPlayer) {
+            serverPlayer.sendSystemMessage(net.minecraft.network.chat.Component.literal("§e§l[KILLSTREAK] §fSentry Gun implantada!"));
+        }
+    }
+
+    public static void shootPredatorMissile(Player player) {
+        Level level = player.level();
+        net.minecraft.world.phys.Vec3 look = player.getLookAngle();
+        
+        net.minecraft.world.entity.projectile.Projectile fireball = (net.minecraft.world.entity.projectile.Projectile) net.minecraft.world.entity.EntityType.FIREBALL.create(level, net.minecraft.world.entity.EntitySpawnReason.TRIGGERED);
+        if (fireball != null) {
+            fireball.setPos(player.getX(), player.getEyeY(), player.getZ());
+            fireball.setDeltaMovement(look.scale(2.5));
+            fireball.setOwner(player);
+            level.addFreshEntity(fireball);
+            
+            level.playSound(null, player.blockPosition(), net.minecraft.sounds.SoundEvents.GHAST_SHOOT, net.minecraft.sounds.SoundSource.PLAYERS, 2.0F, 0.5F);
+            if (player instanceof net.minecraft.server.level.ServerPlayer serverPlayer) {
+                serverPlayer.sendSystemMessage(net.minecraft.network.chat.Component.literal("§b§l[KILLSTREAK] §fPredator Missile lançado!"));
+            }
+        }
+    }
+
     public static void spitSwallowedEntity(Player goat) {
         UUID goatId = goat.getUUID();
         if (!GOAT_SWALLOWED.containsKey(goatId))
@@ -381,6 +472,77 @@ public class AbilityEvents {
             if (storm.ticksLeft % 10 == 0) {
                 storm.owner.level().playSound(null, net.minecraft.core.BlockPos.containing(storm.pos), 
                     net.minecraft.sounds.SoundEvents.SKELETON_SHOOT, net.minecraft.sounds.SoundSource.PLAYERS, 0.5F, 0.5F);
+            }
+        }
+
+        // 6. RADAR DO AIRSTRIKE
+        var airstrikeIterator = ACTIVE_AIRSTRIKES.iterator();
+        while (airstrikeIterator.hasNext()) {
+            AirStrike strike = airstrikeIterator.next();
+            strike.ticks++;
+            
+            if (strike.ticks % 4 == 0) { // explode a cada 4 ticks
+                net.minecraft.world.phys.Vec3 explPos = strike.startPos.add(strike.direction.scale((8 - strike.explosionsLeft) * 3.0));
+                
+                strike.owner.level().explode(strike.owner, explPos.x, explPos.y, explPos.z, 3.5F, false, Level.ExplosionInteraction.NONE);
+                
+                // Partícula de fumaça gigante e fogo no céu
+                if (strike.owner.level() instanceof net.minecraft.server.level.ServerLevel sl) {
+                    sl.sendParticles(net.minecraft.core.particles.ParticleTypes.EXPLOSION_EMITTER, explPos.x, explPos.y, explPos.z, 1, 0, 0, 0, 0.0);
+                }
+                
+                strike.explosionsLeft--;
+            }
+            
+            if (strike.explosionsLeft <= 0) {
+                airstrikeIterator.remove();
+            }
+        }
+
+        // 7. RADAR DA SENTRY GUN
+        var sentryIterator = ACTIVE_SENTRY_GUNS.iterator();
+        while (sentryIterator.hasNext()) {
+            SentryGun sentry = sentryIterator.next();
+            
+            if (!sentry.stand.isAlive() || sentry.ticksLeft <= 0) {
+                sentry.stand.discard();
+                sentryIterator.remove();
+                continue;
+            }
+            
+            sentry.ticksLeft--;
+            
+            if (sentry.ticksLeft % 4 == 0) { // Atira a cada 4 ticks
+                // Acha o inimigo vivo mais próximo num raio de 15 blocos
+                var target = sentry.stand.level().getEntitiesOfClass(LivingEntity.class, sentry.stand.getBoundingBox().inflate(15.0),
+                    e -> e != sentry.owner && e.isAlive() && !(e instanceof net.minecraft.world.entity.decoration.ArmorStand)
+                ).stream().min(Comparator.comparingDouble(e -> e.distanceTo(sentry.stand)));
+                
+                if (target.isPresent()) {
+                    LivingEntity victim = target.get();
+                    net.minecraft.world.phys.Vec3 from = sentry.stand.getEyePosition();
+                    net.minecraft.world.phys.Vec3 to = victim.getEyePosition();
+                    net.minecraft.world.phys.Vec3 dir = to.subtract(from).normalize();
+                    
+                    // Rotaciona o Armor Stand para olhar para a vítima
+                    double yaw = Math.toDegrees(Math.atan2(-dir.x, dir.z));
+                    sentry.stand.setYRot((float) yaw);
+                    sentry.stand.yRotO = (float) yaw;
+                    sentry.stand.setYBodyRot((float) yaw);
+                    
+                    // Atira flecha rápida!
+                    if (sentry.stand.level() instanceof net.minecraft.server.level.ServerLevel sl) {
+                        net.minecraft.world.entity.projectile.Projectile arrow = (net.minecraft.world.entity.projectile.Projectile) net.minecraft.world.entity.EntityType.ARROW.create(sl, net.minecraft.world.entity.EntitySpawnReason.TRIGGERED);
+                        if (arrow != null) {
+                            arrow.setPos(from.x, from.y, from.z);
+                            arrow.setDeltaMovement(dir.scale(2.5));
+                            arrow.setOwner(sentry.owner);
+                            sl.addFreshEntity(arrow);
+                        }
+                    }
+                    
+                    sentry.stand.level().playSound(null, sentry.stand.blockPosition(), net.minecraft.sounds.SoundEvents.ARROW_SHOOT, net.minecraft.sounds.SoundSource.PLAYERS, 1.0F, 1.5F);
+                }
             }
         }
     }
@@ -949,6 +1111,16 @@ public class AbilityEvents {
     public static void onLivingDeath(net.neoforged.neoforge.event.entity.living.LivingDeathEvent event) {
         if (event.getEntity() instanceof Player player) {
             spitSwallowedEntity(player); // Se o jogador engoliu alguém e morreu, ele cospe a vítima
+            
+            // COD MW2 Killstreak award to active Skeletons
+            if (!player.level().isClientSide()) {
+                for (Player p : player.level().players()) {
+                    String morph = p.getData(net.brunodev.smashmobs.registration.ModAttachments.MORPH_DATA);
+                    if ("minecraft:skeleton".equals(morph)) {
+                        giveRandomKillstreak(p);
+                    }
+                }
+            }
         }
     }
 
