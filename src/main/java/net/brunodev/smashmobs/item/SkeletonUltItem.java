@@ -8,9 +8,38 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
 
-public class SkeletonUltItem extends Item {
+public class SkeletonUltItem extends Item implements software.bernie.geckolib.animatable.GeoItem {
+    private final software.bernie.geckolib.animatable.instance.AnimatableInstanceCache cache = software.bernie.geckolib.util.GeckoLibUtil.createInstanceCache(this);
+
     public SkeletonUltItem(Properties properties) {
         super(properties);
+    }
+
+    @Override
+    public void registerControllers(software.bernie.geckolib.animatable.manager.AnimatableManager.ControllerRegistrar controllers) {
+        controllers.add(new software.bernie.geckolib.animation.AnimationController<>("controller", 2, event -> software.bernie.geckolib.animation.object.PlayState.CONTINUE));
+    }
+
+    @Override
+    public software.bernie.geckolib.animatable.instance.AnimatableInstanceCache getAnimatableInstanceCache() {
+        return this.cache;
+    }
+
+    @Override
+    public void createGeoRenderer(java.util.function.Consumer<software.bernie.geckolib.animatable.client.GeoRenderProvider> consumer) {
+        consumer.accept(new software.bernie.geckolib.animatable.client.GeoRenderProvider() {
+            private software.bernie.geckolib.renderer.GeoItemRenderer<net.brunodev.smashmobs.item.SkeletonUltItem> renderer;
+
+            @Override
+            public software.bernie.geckolib.renderer.GeoItemRenderer<net.brunodev.smashmobs.item.SkeletonUltItem> getGeoItemRenderer() {
+                if (this.renderer == null) {
+                    this.renderer = new software.bernie.geckolib.renderer.GeoItemRenderer<>(
+                        new software.bernie.geckolib.model.DefaultedItemGeoModel<>(net.minecraft.resources.Identifier.parse("smashmobs:notebook"))
+                    );
+                }
+                return this.renderer;
+            }
+        });
     }
 
     @Override

@@ -1,0 +1,41 @@
+{
+	"format_version": "1.12.0",
+	"minecraft:geometry": [
+		{
+			"description": {
+				"identifier": "geometry.sentry_gun",
+				"texture_width": 64,
+				"texture_height": 64,
+				"visible_bounds_width": 2,
+				"visible_bounds_height": 2,
+				"visible_bounds_offset": [0, 1, 0]
+			},
+			"bones": [
+				{
+					"name": "bone",
+					"pivot": [0, 0, 0]
+				},
+				{
+					"name": "head",
+					"parent": "bone",
+					"pivot": [0, 11.5, 0],
+					"cubes": [
+						{"origin": [-2.75, 9.25, -2.75], "size": [5.5, 4.5, 5.5], "uv": [0, 0]},
+						{"origin": [-1.75, 13.75, -1.75], "size": [3.5, 1.5, 3.5], "uv": [20, 0]},
+						{"origin": [-1.15, 10.25, -4.25], "size": [2.5, 2.5, 1.5], "pivot": [0, 11.5, -3.5], "rotation": [0, 0, 45], "uv": [20, 4]}
+					]
+				},
+				{
+					"name": "stand",
+					"pivot": [0, 0, 0],
+					"cubes": [
+						{"origin": [2.08658, -1.3806, -3.2], "size": [2, 12, 2], "pivot": [3.08658, 5.6194, -2.2], "rotation": [29.88124, -3.5084, 26.18729], "uv": [0, 9]},
+						{"origin": [-3.91342, -1.3806, -3.2], "size": [2, 12, 2], "pivot": [-2.91342, 5.6194, -2.2], "rotation": [27.1357, 12.70447, -23.144], "uv": [8, 9]},
+						{"origin": [-3.91342, -1.3806, 2], "size": [2, 12, 2], "pivot": [-2.91342, 5.6194, 3], "rotation": [-25.49844, -0.61228, -35.33923], "uv": [16, 9]},
+						{"origin": [2.08658, -1.3806, 2], "size": [2, 12, 2], "pivot": [3.08658, 5.6194, 3], "rotation": [-30.98674, 28.83191, 14.51506], "uv": [0, 23]}
+					]
+				}
+			]
+		}
+	]
+}

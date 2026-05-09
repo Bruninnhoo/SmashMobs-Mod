@@ -36,5 +36,26 @@ public class ClientModEvents {
                     return renderer.withRenderLayer(new software.bernie.geckolib.renderer.layer.builtin.ItemInHandGeoLayer<>(renderer, "rightItem", "leftItem"));
                 }
         );
+
+        event.registerEntityRenderer(SmashMobs.BULLET.get(), context -> 
+            new software.bernie.geckolib.renderer.GeoEntityRenderer<>(context, 
+                new software.bernie.geckolib.model.DefaultedEntityGeoModel<>(net.minecraft.resources.Identifier.parse("smashmobs:bullet")))
+        );
+
+        event.registerEntityRenderer(SmashMobs.PREDATOR_MISSILE.get(), context -> 
+            new software.bernie.geckolib.renderer.GeoEntityRenderer<>(context, 
+                new software.bernie.geckolib.model.DefaultedEntityGeoModel<>(net.minecraft.resources.Identifier.parse("smashmobs:predator_missle")))
+        );
+
+        event.registerEntityRenderer(SmashMobs.AIRSTRIKE_JET.get(), context -> 
+            new software.bernie.geckolib.renderer.GeoEntityRenderer<>(context, 
+                new software.bernie.geckolib.model.DefaultedEntityGeoModel<>(net.minecraft.resources.Identifier.parse("smashmobs:airstrike_jet")))
+        );
+
+        event.registerEntityRenderer(SmashMobs.SENTRY_GUN.get(), context -> 
+            new software.bernie.geckolib.renderer.GeoEntityRenderer<>(context, 
+                new software.bernie.geckolib.model.DefaultedEntityGeoModel<net.brunodev.smashmobs.entity.SentryGunEntity>(
+                    net.minecraft.resources.Identifier.parse("smashmobs:sentry_gun"), "head")) // Defines 'head' as the bone that follows looking direction!
+        );
     }
 }

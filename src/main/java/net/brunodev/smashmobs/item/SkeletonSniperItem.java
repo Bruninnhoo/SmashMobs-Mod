@@ -90,16 +90,16 @@ public class SkeletonSniperItem extends Item implements software.bernie.geckolib
         ItemStack itemstack = player.getItemInHand(hand);
 
         if (!level.isClientSide()) {
-            net.minecraft.world.item.ArrowItem arrowItem = (net.minecraft.world.item.ArrowItem) net.minecraft.world.item.Items.ARROW;
-            var arrow = arrowItem.createArrow(level, new ItemStack(net.minecraft.world.item.Items.ARROW), player, itemstack);
-
-            if (arrow != null) {
-                arrow.setPos(player.getX(), player.getEyeY() - 0.1, player.getZ());
-                arrow.shootFromRotation(player, player.getXRot(), player.getYRot(), 0.0F, 5.0F, 0.1F); 
-                arrow.setBaseDamage(8.0); 
-                arrow.setCritArrow(true);
-                level.addFreshEntity(arrow);
-            }
+            net.brunodev.smashmobs.entity.BulletEntity bullet = new net.brunodev.smashmobs.entity.BulletEntity(SmashMobs.BULLET.get(), level);
+            bullet.setPos(player.getX(), player.getEyeY() - 0.1, player.getZ());
+            bullet.setOwner(player);
+            
+            // High-speed linear ray tracing shooting method from look angle
+            net.minecraft.world.phys.Vec3 look = player.getLookAngle();
+            bullet.setDeltaMovement(look.scale(4.0));
+            bullet.setDamage(12.0);
+            
+            level.addFreshEntity(bullet);
 
             level.playSound(null, player.getX(), player.getY(), player.getZ(),
                     SoundEvents.SKELETON_SHOOT, SoundSource.PLAYERS, 1.5F, 0.5F); 
