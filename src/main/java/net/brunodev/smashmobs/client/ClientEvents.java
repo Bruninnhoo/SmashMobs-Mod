@@ -67,66 +67,79 @@ public class ClientEvents {
         var resource = net.minecraft.resources.Identifier.parse(mobId);
         var optionalHolder = BuiltInRegistries.ENTITY_TYPE.get(resource);
 
-        // --- IRON GOLEM (GECKOLIB) ---
-        if (mobId.equals("minecraft:iron_golem")) {
+        // --- IRON GOLEM E ESQUELETO (GECKOLIB) ---
+        if (mobId.equals("minecraft:iron_golem") || mobId.equals("minecraft:skeleton")) {
             LivingEntity cachedEntity = mobCache.get(player.getUUID());
+            
+            boolean isGolem = mobId.equals("minecraft:iron_golem");
 
-            if (!(cachedEntity instanceof net.brunodev.smashmobs.entity.IronGolemMorph)) {
-                if (cachedEntity != null)
-                    cachedEntity.discard(); // Limpa se era outro mob
-
-                cachedEntity = new net.brunodev.smashmobs.entity.IronGolemMorph(
-                        net.brunodev.smashmobs.SmashMobs.IRON_GOLEM_MORPH.get(), player.level());
-
-                // Dá um ID único e coloca no mundo para as animações funcionarem!
+            if (isGolem && !(cachedEntity instanceof net.brunodev.smashmobs.entity.IronGolemMorph)) {
+                if (cachedEntity != null) cachedEntity.discard();
+                cachedEntity = new net.brunodev.smashmobs.entity.IronGolemMorph(net.brunodev.smashmobs.SmashMobs.IRON_GOLEM_MORPH.get(), player.level());
                 cachedEntity.setId(-Math.abs(player.getUUID().hashCode()));
                 cachedEntity.setNoGravity(true);
+                if (cachedEntity instanceof net.minecraft.world.entity.Mob mob) mob.setNoAi(true);
                 Minecraft.getInstance().level.addEntity(cachedEntity);
-
+                mobCache.put(player.getUUID(), cachedEntity);
+            } else if (!isGolem && !(cachedEntity instanceof net.brunodev.smashmobs.entity.SkeletonMorph)) {
+                if (cachedEntity != null) cachedEntity.discard();
+                cachedEntity = new net.brunodev.smashmobs.entity.SkeletonMorph(net.brunodev.smashmobs.SmashMobs.SKELETON_MORPH.get(), player.level());
+                cachedEntity.setId(-Math.abs(player.getUUID().hashCode()));
+                cachedEntity.setNoGravity(true);
+                if (cachedEntity instanceof net.minecraft.world.entity.Mob mob) mob.setNoAi(true);
+                Minecraft.getInstance().level.addEntity(cachedEntity);
                 mobCache.put(player.getUUID(), cachedEntity);
             }
 
-            net.brunodev.smashmobs.entity.IronGolemMorph dummyGolem = (net.brunodev.smashmobs.entity.IronGolemMorph) cachedEntity;
-
             // Sincroniza posições físicas e de câmera
-            dummyGolem.setPos(player.getX(), player.getY(), player.getZ());
-            dummyGolem.xo = player.xo;
-            dummyGolem.yo = player.yo;
-            dummyGolem.zo = player.zo;
-            dummyGolem.xOld = player.xOld;
-            dummyGolem.yOld = player.yOld;
-            dummyGolem.zOld = player.zOld;
+            cachedEntity.setPos(player.getX(), player.getY(), player.getZ());
+            cachedEntity.xo = player.xo;
+            cachedEntity.yo = player.yo;
+            cachedEntity.zo = player.zo;
+            cachedEntity.xOld = player.xOld;
+            cachedEntity.yOld = player.yOld;
+            cachedEntity.zOld = player.zOld;
 
-            dummyGolem.setYRot(player.getYRot());
-            dummyGolem.yRotO = player.yRotO;
-            dummyGolem.setXRot(player.getXRot());
-            dummyGolem.xRotO = player.xRotO;
-            dummyGolem.setYHeadRot(player.getYHeadRot());
-            dummyGolem.yHeadRotO = player.yHeadRotO;
-            dummyGolem.setYBodyRot(player.yBodyRot);
-            dummyGolem.yBodyRotO = player.yBodyRotO;
-            dummyGolem.tickCount = player.tickCount;
+            cachedEntity.setYRot(player.getYRot());
+            cachedEntity.yRotO = player.yRotO;
+            cachedEntity.setXRot(player.getXRot());
+            cachedEntity.xRotO = player.xRotO;
+            cachedEntity.setYHeadRot(player.getYHeadRot());
+            cachedEntity.yHeadRotO = player.yHeadRotO;
+            cachedEntity.setYBodyRot(player.yBodyRot);
+            cachedEntity.yBodyRotO = player.yBodyRotO;
+            cachedEntity.tickCount = player.tickCount;
 
-            // Radar de caminhada para o GeckoLib
             double dx = player.getX() - player.xo;
             double dz = player.getZ() - player.zo;
-            dummyGolem.isPlayerMoving = (dx * dx + dz * dz) > 0.0001;
+            boolean moving = (dx * dx + dz * dz) > 0.0001;
 
-            // Esconde se for a sua própria câmera em 1ª pessoa
-            if (player == Minecraft.getInstance().player
-                    && Minecraft.getInstance().options.getCameraType().isFirstPerson()) {
-                dummyGolem.setInvisible(true);
-            } else {
-                dummyGolem.setInvisible(false);
+            if (cachedEntity instanceof net.brunodev.smashmobs.entity.IronGolemMorph golem) {
+                golem.isPlayerMoving = moving;
+            } else if (cachedEntity instanceof net.brunodev.smashmobs.entity.SkeletonMorph skeleton) {
+                skeleton.isPlayerMoving = moving;
+                skeleton.isHoldingAwp = player.getMainHandItem().is(net.brunodev.smashmobs.SmashMobs.SKELETON_SNIPER.get());
+                
+                // Faz com que o SkeletonMorph segure fisicamente o item na mão principal!
+                skeleton.setItemInHand(net.minecraft.world.InteractionHand.MAIN_HAND, player.getMainHandItem());
             }
 
-            return; // O Golem é desenhado pelo próprio Minecraft agora!
+            // Descarta e remove se for a sua própria câmera em 1ª pessoa (evita cópias fantasmas!)
+            if (player == Minecraft.getInstance().player && Minecraft.getInstance().options.getCameraType().isFirstPerson()) {
+                cachedEntity.discard();
+                mobCache.remove(player.getUUID());
+                return;
+            } else {
+                cachedEntity.setInvisible(false);
+            }
+
+            return; // O Golem/Esqueleto é desenhado pelo próprio Minecraft agora!
         }
 
         // --- MOBS VANILLA (Creeper, etc) ---
         // Se trocou do Golem pro Vanilla, limpa o Golem do mundo
         LivingEntity oldEntity = mobCache.get(player.getUUID());
-        if (oldEntity instanceof net.brunodev.smashmobs.entity.IronGolemMorph) {
+        if (oldEntity instanceof net.brunodev.smashmobs.entity.IronGolemMorph || oldEntity instanceof net.brunodev.smashmobs.entity.SkeletonMorph) {
             oldEntity.discard();
             mobCache.remove(player.getUUID());
         }
@@ -205,18 +218,13 @@ public class ClientEvents {
             return;
 
         // =========================================================================
-        // O CONSERTO DA PRIMEIRA PESSOA (Roda o tempo todo, nunca trava!)
+        // O CONSERTO DA PRIMEIRA PESSOA E COPIAS (Roda o tempo todo, nunca trava!)
         // =========================================================================
         String mobId = player.getData(ModAttachments.MORPH_DATA);
-        if ("minecraft:iron_golem".equals(mobId)) {
-            LivingEntity dummy = mobCache.get(player.getUUID());
-            if (dummy instanceof net.brunodev.smashmobs.entity.IronGolemMorph) {
-                // Se estiver em 1ª pessoa, força a invisibilidade
-                if (mc.options.getCameraType().isFirstPerson()) {
-                    dummy.setInvisible(true);
-                } else {
-                    dummy.setInvisible(false);
-                }
+        if (mc.options.getCameraType().isFirstPerson() || mobId == null || mobId.equals("none")) {
+            LivingEntity dummy = mobCache.remove(player.getUUID());
+            if (dummy != null) {
+                dummy.discard();
             }
         }
 

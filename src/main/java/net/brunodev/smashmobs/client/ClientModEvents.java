@@ -24,5 +24,17 @@ public class ClientModEvents {
                 SmashMobs.GOLEM_TRAIN.get(),
                 context -> new software.bernie.geckolib.renderer.GeoEntityRenderer<>(context, SmashMobs.GOLEM_TRAIN.get()) // Você precisará criar o Modelo GeoModel do trem igual fez com o Golem!
         );
+
+        event.registerEntityRenderer(
+                SmashMobs.SKELETON_MORPH.get(),
+                context -> {
+                    var model = new software.bernie.geckolib.model.DefaultedEntityGeoModel<net.brunodev.smashmobs.entity.SkeletonMorph>(
+                        net.minecraft.resources.Identifier.parse("smashmobs:skeleton_morph"),
+                        "head"
+                    );
+                    var renderer = new software.bernie.geckolib.renderer.GeoEntityRenderer<>(context, model);
+                    return renderer.withRenderLayer(new software.bernie.geckolib.renderer.layer.builtin.ItemInHandGeoLayer<>(renderer, "rightItem", "leftItem"));
+                }
+        );
     }
 }

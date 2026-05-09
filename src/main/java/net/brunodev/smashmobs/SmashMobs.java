@@ -113,6 +113,15 @@ public class SmashMobs {
                                                         .build(net.minecraft.resources.ResourceKey
                                                                         .create(Registries.ENTITY_TYPE, identifier)));
 
+        public static final DeferredHolder<EntityType<?>, EntityType<net.brunodev.smashmobs.entity.SkeletonMorph>> SKELETON_MORPH = ENTITIES
+                        .register("skeleton_morph", (
+                                        identifier) -> EntityType.Builder.<net.brunodev.smashmobs.entity.SkeletonMorph>of(
+                                                        net.brunodev.smashmobs.entity.SkeletonMorph::new,
+                                                        MobCategory.MISC)
+                                                        .sized(0.6F, 1.99F)
+                                                        .build(net.minecraft.resources.ResourceKey
+                                                                        .create(Registries.ENTITY_TYPE, identifier)));
+
         public static final Supplier<SoundEvent> GOLEM_THROW_ANVIL_SOUND = SOUNDS.register("golem_throw_anvil",
                         SoundEvent::createVariableRangeEvent);
 
@@ -204,6 +213,7 @@ public class SmashMobs {
 
         private void registerAttributes(net.neoforged.neoforge.event.entity.EntityAttributeCreationEvent event) {
                 event.put(IRON_GOLEM_MORPH.get(), net.minecraft.world.entity.Mob.createMobAttributes().build());
+                event.put(SKELETON_MORPH.get(), net.minecraft.world.entity.Mob.createMobAttributes().build());
         }
 
         @SubscribeEvent

@@ -10,9 +10,79 @@ import net.brunodev.smashmobs.SmashMobs;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 
-public class SkeletonSniperItem extends Item {
+public class SkeletonSniperItem extends Item implements software.bernie.geckolib.animatable.GeoItem {
+    private final software.bernie.geckolib.animatable.instance.AnimatableInstanceCache cache = software.bernie.geckolib.util.GeckoLibUtil.createInstanceCache(this);
+
     public SkeletonSniperItem(Properties properties) {
         super(properties);
+    }
+
+    @Override
+    public void registerControllers(software.bernie.geckolib.animatable.manager.AnimatableManager.ControllerRegistrar controllers) {
+        controllers.add(new software.bernie.geckolib.animation.AnimationController<>("controller", 2, event -> software.bernie.geckolib.animation.object.PlayState.CONTINUE));
+    }
+
+    @Override
+    public software.bernie.geckolib.animatable.instance.AnimatableInstanceCache getAnimatableInstanceCache() {
+        return this.cache;
+    }
+
+    @Override
+    public boolean isPerspectiveAware() {
+        return true;
+    }
+
+    @Override
+    public void createGeoRenderer(java.util.function.Consumer<software.bernie.geckolib.animatable.client.GeoRenderProvider> consumer) {
+        consumer.accept(new software.bernie.geckolib.animatable.client.GeoRenderProvider() {
+            private software.bernie.geckolib.renderer.GeoItemRenderer<net.brunodev.smashmobs.item.SkeletonSniperItem> renderer;
+
+            @Override
+            public software.bernie.geckolib.renderer.GeoItemRenderer<net.brunodev.smashmobs.item.SkeletonSniperItem> getGeoItemRenderer() {
+                if (this.renderer == null) {
+                    this.renderer = new software.bernie.geckolib.renderer.GeoItemRenderer<>(new software.bernie.geckolib.model.DefaultedItemGeoModel<>(net.minecraft.resources.Identifier.parse("smashmobs:awp"))) {
+                        @Override
+                        public void adjustRenderPose(software.bernie.geckolib.renderer.base.RenderPassInfo<software.bernie.geckolib.renderer.base.GeoRenderState> info) {
+                            super.adjustRenderPose(info);
+                            net.minecraft.world.item.ItemDisplayContext perspective = info.getGeckolibData(software.bernie.geckolib.constant.DataTickets.ITEM_RENDER_PERSPECTIVE);
+                            boolean isFirstPerson = perspective == net.minecraft.world.item.ItemDisplayContext.FIRST_PERSON_RIGHT_HAND || perspective == net.minecraft.world.item.ItemDisplayContext.FIRST_PERSON_LEFT_HAND;
+                            
+
+                            info.model().getBone("rightArm").ifPresentOrElse(bone -> {
+                                if (bone.frameSnapshot == null) {
+                                    bone.frameSnapshot = software.bernie.geckolib.animation.state.BoneSnapshot.create(bone);
+                                }
+                                bone.frameSnapshot.skipRender(!isFirstPerson);
+                                bone.frameSnapshot.skipChildrenRender(!isFirstPerson);
+                                if (!isFirstPerson) {
+                                    bone.frameSnapshot.setScale(0, 0, 0);
+                                } else {
+                                    bone.frameSnapshot.setScale(1, 1, 1);
+                                }
+                            }, () -> {
+                                System.out.println("[SMASHMOBS DEBUG] rightArm bone NOT found in model!");
+                            });
+                            
+                            info.model().getBone("leftArm").ifPresentOrElse(bone -> {
+                                if (bone.frameSnapshot == null) {
+                                    bone.frameSnapshot = software.bernie.geckolib.animation.state.BoneSnapshot.create(bone);
+                                }
+                                bone.frameSnapshot.skipRender(!isFirstPerson);
+                                bone.frameSnapshot.skipChildrenRender(!isFirstPerson);
+                                if (!isFirstPerson) {
+                                    bone.frameSnapshot.setScale(0, 0, 0);
+                                } else {
+                                    bone.frameSnapshot.setScale(1, 1, 1);
+                                }
+                            }, () -> {
+                                System.out.println("[SMASHMOBS DEBUG] leftArm bone NOT found in model!");
+                            });
+                        }
+                    };
+                }
+                return this.renderer;
+            }
+        });
     }
 
     @Override
@@ -20,36 +90,22 @@ public class SkeletonSniperItem extends Item {
         ItemStack itemstack = player.getItemInHand(hand);
 
         if (!level.isClientSide()) {
-            // Cria uma flecha super rápida e forte usando ArrowItem para evitar erro de
-            // pacote
             net.minecraft.world.item.ArrowItem arrowItem = (net.minecraft.world.item.ArrowItem) net.minecraft.world.item.Items.ARROW;
-
-            // createArrow(Level, ItemStack ammo, LivingEntity shooter, ItemStack weapon) -
-            // no 1.21.1 pode ter mudado,
-            // mas podemos testar o método padrão createArrow
-            var arrow = arrowItem.createArrow(level, new ItemStack(net.minecraft.world.item.Items.ARROW), player,
-                    itemstack);
+            var arrow = arrowItem.createArrow(level, new ItemStack(net.minecraft.world.item.Items.ARROW), player, itemstack);
 
             if (arrow != null) {
                 arrow.setPos(player.getX(), player.getEyeY() - 0.1, player.getZ());
-                arrow.shootFromRotation(player, player.getXRot(), player.getYRot(), 0.0F, 5.0F, 0.1F); // 5.0F é MUITO
-                                                                                                       // rápido
-
-                // setBaseDamage() existe em AbstractArrow
-                arrow.setBaseDamage(8.0); // Alto dano base!
+                arrow.shootFromRotation(player, player.getXRot(), player.getYRot(), 0.0F, 5.0F, 0.1F); 
+                arrow.setBaseDamage(8.0); 
                 arrow.setCritArrow(true);
-
-                // Atirar a flecha
                 level.addFreshEntity(arrow);
             }
 
-            // Som do tiro
             level.playSound(null, player.getX(), player.getY(), player.getZ(),
-                    SoundEvents.SKELETON_SHOOT, SoundSource.PLAYERS, 1.5F, 0.5F); // Som grave pra parecer um sniper
+                    SoundEvents.SKELETON_SHOOT, SoundSource.PLAYERS, 1.5F, 0.5F); 
             level.playSound(null, player.getX(), player.getY(), player.getZ(),
                     SmashMobs.SKELETON_SHOOT_SOUND.get(), SoundSource.PLAYERS, 1.0F, 1.5F);
 
-            // Cooldown de 4 segundos (80 ticks) para não metralhar
             player.getCooldowns().addCooldown(itemstack, 80);
         }
 
