@@ -74,33 +74,23 @@ public class GolemTrainEntity extends Projectile implements GeoEntity {
             for (LivingEntity target : targets) {
                 if (!draggedVictims.contains(target)) {
                     draggedVictims.add(target);
+                    
+                    // Dano MASSIVO imediato que gera a repulsão natural do Minecraft
+                    target.hurt(this.damageSources().mobAttack((LivingEntity) this.getOwner()), 30.0F); 
+                    target.hurtMarked = true;
+                    
+                    // Som de impacto
+                    this.level().playSound(null, this.blockPosition(),
+                            SoundEvents.GENERIC_EXPLODE.value(),
+                            SoundSource.PLAYERS, 1.5F, 0.7F);
                     this.level().playSound(null, this.blockPosition(),
                             SoundEvents.ZOMBIE_ATTACK_IRON_DOOR,
                             SoundSource.PLAYERS, 2.0F, 0.5F);
                 }
             }
 
-            // Arrasta os alvos
-            for (LivingEntity victim : draggedVictims) {
-                if (victim.isAlive()) {
-                    victim.teleportTo(this.getX() + (move.x * 2), this.getY(), this.getZ() + (move.z * 2));
-                    victim.setDeltaMovement(0, 0, 0);
-                    victim.fallDistance = 0;
-                }
-            }
-
-            // Fim da linha: Explosão
+            // Simplesmente remove a entidade quando o tempo de vida acaba sem arrastar ninguém
             if (this.lifeTime >= 40) {
-                for (LivingEntity victim : draggedVictims) {
-                    if (victim.isAlive()) {
-                        victim.hurt(this.damageSources().mobAttack((LivingEntity) this.getOwner()), 25.0F);
-                        victim.setDeltaMovement(move.normalize().scale(3.0).add(0, 1.2, 0));
-                        victim.hurtMarked = true;
-                    }
-                }
-                this.level().playSound(null, this.blockPosition(),
-                        SoundEvents.GENERIC_EXPLODE.value(),
-                        SoundSource.PLAYERS, 2.0F, 0.5F);
                 this.discard();
             }
         }

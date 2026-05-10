@@ -44,6 +44,7 @@ import net.neoforged.neoforge.event.entity.living.LivingDamageEvent;
 import net.neoforged.neoforge.event.entity.ProjectileImpactEvent;
 import net.neoforged.neoforge.event.entity.living.LivingDeathEvent;
 import net.neoforged.neoforge.event.entity.living.LivingEvent;
+import net.neoforged.neoforge.event.entity.living.LivingIncomingDamageEvent;
 
 import java.util.*;
 
@@ -207,12 +208,15 @@ public class AbilityEvents {
         HitResult hr = player.pick(60.0, 0.0F, false);
         Vec3 targetPos = hr.getLocation();
 
-        // Spawn high above target
-        Vec3 spawnPos = targetPos.add(0, 35, 0);
+        // Spawn high above and offset diagonally
+        Vec3 spawnPos = targetPos.add(20, 35, 20);
 
         PredatorMissileEntity missile = new PredatorMissileEntity(SmashMobs.PREDATOR_MISSILE.get(), level);
         missile.setPos(spawnPos);
-        missile.setDeltaMovement(0, -2.5, 0); // Dive down
+        
+        // Calcula a direcao diagonal ate o alvo
+        Vec3 direction = targetPos.subtract(spawnPos).normalize();
+        missile.setDeltaMovement(direction.scale(2.5)); // Mergulho diagonal rapido
         missile.setOwner(player);
         level.addFreshEntity(missile);
 
@@ -255,6 +259,16 @@ public class AbilityEvents {
                         stolenItem = SmashMobs.GOLEM_THROW_ANVIL.get();
                     else if (morph.equals("minecraft:goat"))
                         stolenItem = SmashMobs.GOAT_DASH.get();
+                    else if (morph.equals("minecraft:chicken"))
+                        stolenItem = SmashMobs.CHICKEN_MACHINE_GUN.get();
+                    else if (morph.equals("minecraft:skeleton")) {
+                        Item[] skeletonPool = {
+                            SmashMobs.SKELETON_PREDATOR_MISSILE.get(),
+                            SmashMobs.SKELETON_AIRSTRIKE.get(),
+                            SmashMobs.SKELETON_SENTRY.get()
+                        };
+                        stolenItem = skeletonPool[new java.util.Random().nextInt(skeletonPool.length)];
+                    }
 
                     if (stolenItem != null && goat.getInventory().contains(new ItemStack(
                             SmashMobs.GOAT_SWALLOW.get()))) {
@@ -552,6 +566,9 @@ public class AbilityEvents {
 
                 // Cria o gancho e coloca na pista!
                 FLYING_HOOKS.add(new GolemHook(golemPlayer, eyePos, dir));
+
+                // Adiciona COOLDOWN DE LANÇAMENTO para impedir spam infinito se errar o gancho!
+                golemPlayer.getCooldowns().addCooldown(golemPlayer.getItemInHand(InteractionHand.MAIN_HAND), 60); // 3 Segundos
 
                 // Som de lançamento no ar
                 level.playSound(null, golemPlayer.blockPosition(),
@@ -969,6 +986,9 @@ public class AbilityEvents {
                         serverPlayer.teleportTo(arenaSpawn.x, arenaSpawn.y, arenaSpawn.z);
                         serverPlayer.setDeltaMovement(0, 0, 0);
                         serverPlayer.fallDistance = 0;
+
+                        // CHECA SE O JOGO ACABOU AGORA QUE ALGUEM FOI ELIMINADO!
+                        GameManager.checkWinCondition(player.level().getServer());
                     }
                 }
                 return;
@@ -1226,6 +1246,38 @@ public class AbilityEvents {
                 player.sendSystemMessage(
                     net.minecraft.network.chat.Component.literal("§6[Soldado] §eAlguém caiu! Você ganhou uma habilidade tática!")
                 );
+            }
+        }
+    }
+    @SubscribeEvent
+    public static void onMobMeleeDamage(LivingIncomingDamageEvent event) {
+        if (event.getSource().getEntity() instanceof Player attacker && event.getSource().getDirectEntity() == attacker) {
+            String morph = attacker.getData(ModAttachments.MORPH_DATA);
+            if (morph == null || morph.isEmpty()) return;
+
+            float baseAmount = event.getAmount();
+            float customDamage = baseAmount;
+
+            switch (morph) {
+                case "minecraft:iron_golem":
+                    customDamage = 7.0F; // 3.5 Corações
+                    break;
+                case "minecraft:goat":
+                    customDamage = 6.0F; // 3 Corações
+                    break;
+                case "minecraft:creeper":
+                    customDamage = 5.0F; // 2.5 Corações
+                    break;
+                case "minecraft:skeleton":
+                    customDamage = 4.0F; // 2 Corações
+                    break;
+                case "minecraft:chicken":
+                    customDamage = 2.5F; // 1.25 Corações
+                    break;
+            }
+
+            if (customDamage != baseAmount) {
+                event.setAmount(customDamage);
             }
         }
     }

@@ -60,9 +60,13 @@ public class DoubleJumpClient {
                     // --- O PULO DUPLO SÓ ACONTECE NO SEGUNDO APERTO ---
                     jumpTimer = 20; // 1 segundo de cooldown após um duplo pulo (20 ticks)
 
-                    Vec3 currentMotion = player.getDeltaMovement();
-                    // 0.5D é uma altura ótima para double jump (nem muito alto, nem muito baixo)
-                    player.setDeltaMovement(currentMotion.x * 1.4, 1.5D, currentMotion.z * 1.4);
+                    Vec3 look = player.getLookAngle();
+                    // Cria um dash para a direção horizontal onde o jogador está olhando!
+                    // Aumentamos consideravelmente a propulsão horizontal para dar o feeling de "buff"
+                    double dashPower = 1.1D; 
+                    double jumpPower = 0.75D; // 0.75D é excelente para altura equilibrada com a distância horizontal
+
+                    player.setDeltaMovement(look.x * dashPower, jumpPower, look.z * dashPower);
 
                     player.fallDistance = 0.0F;
 

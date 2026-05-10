@@ -107,4 +107,66 @@ public class GameManager {
         AbilityEvents.FLYING_BONES.clear();
         AbilityEvents.ARROW_STORMS.clear();
     }
+
+    // NOVA LÓGICA: VERIFICA SE ALGUEM VENCEU!
+    public static void checkWinCondition(MinecraftServer server) {
+        if (!isGameRunning) return;
+
+        java.util.List<ServerPlayer> alivePlayers = new java.util.ArrayList<>();
+        for (ServerPlayer p : server.getPlayerList().getPlayers()) {
+            Integer lives = p.getData(ModAttachments.PLAYER_LIVES);
+            // Um jogador está ativo se tem vidas > 0 e não está espectador
+            if (lives != null && lives > 0 && p.gameMode.getGameModeForPlayer() != GameType.SPECTATOR) {
+                alivePlayers.add(p);
+            }
+        }
+
+        // Condição de vitória: Só sobrou 1!
+        if (alivePlayers.size() == 1) {
+            declareWinner(server, alivePlayers.get(0));
+        } else if (alivePlayers.size() == 0) {
+            // Prevenção de bugs se os dois últimos caírem juntos
+            endGame(server);
+        }
+    }
+
+    private static void declareWinner(MinecraftServer server, ServerPlayer winner) {
+        isGameRunning = false; // Para a partida imediatamente
+
+        server.getPlayerList().broadcastSystemMessage(Component.empty(), false);
+        server.getPlayerList().broadcastSystemMessage(
+                Component.literal("§6§l★====================================★"), false);
+        server.getPlayerList().broadcastSystemMessage(
+                Component.literal("§e§l      🏆 VITÓRIA DO SMASH MOBS 🏆"), false);
+        server.getPlayerList().broadcastSystemMessage(
+                Component.literal("§f           Vencedor: §d§l" + winner.getScoreboardName()), false);
+        server.getPlayerList().broadcastSystemMessage(
+                Component.literal("§6§l★====================================★"), false);
+        server.getPlayerList().broadcastSystemMessage(Component.empty(), false);
+
+        net.minecraft.world.phys.Vec3 lobbySpawn = SmashPositionManager.getLobbyVec();
+
+        // Teleporta geral de volta, cura e toca som de festa!
+        for (ServerPlayer p : server.getPlayerList().getPlayers()) {
+            p.setData(ModAttachments.PLAYER_LIVES, 0);
+            p.setData(ModAttachments.DAMAGE_PERCENT, 0.0f);
+            p.setGameMode(GameType.ADVENTURE); 
+            p.teleportTo(lobbySpawn.x, lobbySpawn.y, lobbySpawn.z);
+            p.setDeltaMovement(0, 0, 0);
+            p.fallDistance = 0;
+            p.setHealth(p.getMaxHealth());
+            
+            // Toca o som de desafio concluído para celebrar!
+            p.level().playSound(null, p.blockPosition(), net.minecraft.sounds.SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, 
+                               net.minecraft.sounds.SoundSource.MASTER, 1.0F, 1.0F);
+        }
+
+        // Limpezas padrões (cópia simplificada da endGame)
+        for (ItemEntity mine : AbilityEvents.CHICKEN_MINES.keySet()) if (mine != null && mine.isAlive()) mine.discard();
+        AbilityEvents.CHICKEN_MINES.clear();
+        for (FallingBlockEntity anvil : AbilityEvents.FLYING_ANVILS.keySet()) if (anvil != null && anvil.isAlive()) anvil.discard();
+        AbilityEvents.FLYING_ANVILS.clear();
+        AbilityEvents.FLYING_BONES.clear();
+        AbilityEvents.ARROW_STORMS.clear();
+    }
 }
