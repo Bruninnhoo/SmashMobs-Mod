@@ -13,7 +13,7 @@ import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
  
-public class ChickenUltItem extends Item {
+public class ChickenUltItem extends SmashMobItemBase {
     public ChickenUltItem(Properties properties) {
         super(properties);
     }
@@ -57,3 +57,4 @@ public class ChickenUltItem extends Item {
         return InteractionResult.SUCCESS;
     }
 }
+

@@ -51,7 +51,7 @@ public class PredatorMissileEntity extends Projectile implements GeoEntity {
     protected void onHit(HitResult result) {
         super.onHit(result);
         if (!this.level().isClientSide()) {
-            this.level().explode(this, this.getX(), this.getY(), this.getZ(), 5.0F, false, Level.ExplosionInteraction.NONE);
+            this.level().explode(this, this.getX(), this.getY(), this.getZ(), 8.0F, false, Level.ExplosionInteraction.NONE);
             this.discard();
         }
     }

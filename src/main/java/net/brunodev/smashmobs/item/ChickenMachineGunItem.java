@@ -9,7 +9,7 @@ import net.minecraft.world.InteractionResult;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
  
-public class ChickenMachineGunItem extends Item {
+public class ChickenMachineGunItem extends SmashMobItemBase {
     public ChickenMachineGunItem(Properties properties) {
         super(properties);
     }
@@ -29,3 +29,4 @@ public class ChickenMachineGunItem extends Item {
         return InteractionResult.SUCCESS;
     }
 }
+

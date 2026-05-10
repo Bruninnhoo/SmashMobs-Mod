@@ -7,7 +7,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.Level;
  
-public class CreeperThrowTntItem extends Item {
+public class CreeperThrowTntItem extends SmashMobItemBase {
  
     public CreeperThrowTntItem(Properties properties) {
         super(properties);
@@ -20,6 +20,9 @@ public class CreeperThrowTntItem extends Item {
  
             var look = player.getLookAngle();
             tnt.setDeltaMovement(look.x * 1.2, look.y * 1.2, look.z * 1.2);
+            
+            // CORREÇÃO: Atribuir o dono para o sistema de Smash saber de QUEM foi a explosão!
+            tnt.setOwner(player);
  
             level.addFreshEntity(tnt);
  

@@ -7,7 +7,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.Level;
  
-public class GolemGrabItem extends Item {
+public class GolemGrabItem extends SmashMobItemBase {
  
     public GolemGrabItem(Properties properties) {
         super(properties);

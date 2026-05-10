@@ -13,7 +13,7 @@ import net.minecraft.world.phys.Vec3;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
  
-public class ChickenTrapItem extends Item {
+public class ChickenTrapItem extends SmashMobItemBase {
     public ChickenTrapItem(Properties properties) {
         super(properties);
     }
@@ -41,3 +41,4 @@ public class ChickenTrapItem extends Item {
         return InteractionResult.SUCCESS;
     }
 }
+

@@ -9,7 +9,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
  
-public class SkeletonBoomerangItem extends Item {
+public class SkeletonBoomerangItem extends SmashMobItemBase {
     public SkeletonBoomerangItem(Properties properties) {
         super(properties);
     }
@@ -27,3 +27,4 @@ public class SkeletonBoomerangItem extends Item {
         return InteractionResult.SUCCESS;
     }
 }
+

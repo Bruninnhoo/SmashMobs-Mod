@@ -12,7 +12,7 @@ import net.minecraft.world.phys.Vec3;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
  
-public class GoatSwallowItem extends Item {
+public class GoatSwallowItem extends SmashMobItemBase {
     public GoatSwallowItem(Properties properties) {
         super(properties);
     }
@@ -67,3 +67,4 @@ public class GoatSwallowItem extends Item {
         return InteractionResult.SUCCESS;
     }
 }
+

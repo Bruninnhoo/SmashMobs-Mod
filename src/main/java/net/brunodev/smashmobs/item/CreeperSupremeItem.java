@@ -10,7 +10,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
  
-public class CreeperSupremeItem extends Item {
+public class CreeperSupremeItem extends SmashMobItemBase {
  
     public CreeperSupremeItem(Properties properties) {
         super(properties);

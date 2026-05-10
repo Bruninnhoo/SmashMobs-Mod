@@ -9,7 +9,15 @@ import net.minecraft.world.item.Items;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
  
-public class SkeletonClass {
+public class SkeletonClass implements ISmashMob {
+    @Override
+    public void unequip(Player player) {
+        player.getInventory().clearContent();
+        var scaleAttr = player.getAttribute(net.minecraft.world.entity.ai.attributes.Attributes.SCALE);
+        if (scaleAttr != null) scaleAttr.setBaseValue(1.0D);
+    }
+ 
+    @Override
     public void equip(Player player) {
         player.getInventory().clearContent();
  

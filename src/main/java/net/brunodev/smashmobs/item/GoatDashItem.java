@@ -9,7 +9,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
  
-public class GoatDashItem extends Item {
+public class GoatDashItem extends SmashMobItemBase {
     public GoatDashItem(Properties properties) {
         super(properties);
     }

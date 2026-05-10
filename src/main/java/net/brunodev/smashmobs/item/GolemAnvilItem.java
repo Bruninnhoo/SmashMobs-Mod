@@ -12,7 +12,7 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.neoforged.neoforge.network.PacketDistributor;
  
-public class GolemAnvilItem extends Item {
+public class GolemAnvilItem extends SmashMobItemBase {
  
     public GolemAnvilItem(Properties properties) {
         super(properties);

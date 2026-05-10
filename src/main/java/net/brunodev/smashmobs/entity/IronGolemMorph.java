@@ -58,8 +58,22 @@ public class IronGolemMorph extends PathfinderMob implements GeoEntity {
 
     @Override
     public boolean isPickable() {
-        // Diz pro jogo: "O mouse atravessa meu corpo, eu sou um holograma!"
-        return false;
+        return false; // Desliga a seleção
+    }
+
+    @Override
+    public boolean isAttackable() {
+        return false; // Impede o jogo de registrar ataques diretamente nele
+    }
+
+    @Override
+    public boolean canBeCollidedWith(Entity entity) {
+        return false; // Remove colisão com projéteis e jogadores
+    }
+
+    @Override
+    public boolean skipAttackInteraction(Entity entity) {
+        return true; // Pula qualquer processamento de hit local
     }
 
     @Override

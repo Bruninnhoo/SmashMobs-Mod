@@ -9,7 +9,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
  
-public class GoatUltItem extends Item {
+public class GoatUltItem extends SmashMobItemBase {
     public GoatUltItem(Properties properties) {
         super(properties);
     }
@@ -32,3 +32,4 @@ public class GoatUltItem extends Item {
         return InteractionResult.SUCCESS;
     }
 }
+

@@ -669,6 +669,20 @@ public class AbilityEvents {
             }
         }
 
+        // --- LÓGICA DA EXPLOSÃO PRIMÁRIA DO CREEPER (VOO BOMBA) ---
+        if (CREEPER_ARMED_PLAYERS.contains(player.getUUID())) {
+            var area = player.getBoundingBox().inflate(1.2);
+            boolean enemyNearby = !player.level().getEntitiesOfClass(LivingEntity.class, area, e -> e != player && e.isAlive()).isEmpty();
+
+            // Explode se bater no chão, parede ou inimigo no ar!
+            if (player.onGround() || player.horizontalCollision || enemyNearby) {
+                CREEPER_ARMED_PLAYERS.remove(player.getUUID());
+                // Explosão primária BUFFADA para 6.0F!
+                player.level().explode(player, player.getX(), player.getY(), player.getZ(), 6.0F, false,
+                        Level.ExplosionInteraction.NONE);
+            }
+        }
+
         // --- CREEPER SUPREME LÓGICA ---
         if (CREEPER_SUPREMES.containsKey(player.getUUID())) {
             int ticksLeft = CREEPER_SUPREMES.get(player.getUUID());
@@ -703,7 +717,8 @@ public class AbilityEvents {
                 CREEPER_SUPREMES.put(player.getUUID(), ticksLeft - 1);
             } else {
                 CREEPER_SUPREMES.remove(player.getUUID());
-                player.level().explode(player, player.getX(), player.getY() + 1, player.getZ(), 6.0F, false,
+                // ULTIMATE NUCLEAR: De 6.0F para 12.0F de puro Caos!
+                player.level().explode(player, player.getX(), player.getY() + 1, player.getZ(), 12.0F, false,
                         Level.ExplosionInteraction.NONE);
             }
         }
@@ -1002,8 +1017,8 @@ public class AbilityEvents {
             // Pega a porcentagem atual do jogador
             float currentPercent = player.getData(ModAttachments.DAMAGE_PERCENT);
 
-            // Aumenta a porcentagem baseado no dano original
-            float newPercent = currentPercent + (event.getOriginalDamage() * 3.0f); // Cada 1 de dano dá 3%
+            // Aumenta a porcentagem baseado no dano original (Buffado para 6.0x para acumular mais rápido!)
+            float newPercent = currentPercent + (event.getOriginalDamage() * 6.0f); 
             player.setData(ModAttachments.DAMAGE_PERCENT, newPercent);
 
             // ATUALIZA O SCOREBOARD VISUAL
@@ -1016,21 +1031,33 @@ public class AbilityEvents {
             }
 
             // Cancela o dano para o jogador não morrer
-            event.setNewDamage(0.001f); // Dano quase nulo para tocar som e animação de piscar vermelho
+            event.setNewDamage(0.001f); 
 
             // Aplica repulsão extra (Knockback)
-            Entity attacker = event.getSource().getEntity();
-            if (attacker != null) {
-                double dx = player.getX() - attacker.getX();
-                double dz = player.getZ() - attacker.getZ();
+            // Correção CRITICA: Pega a entidade DIRETA (o tiro, o trem, o projétil) em vez do dono que está longe!
+            Entity sourceEntity = event.getSource().getDirectEntity();
+            if (sourceEntity == null) {
+                sourceEntity = event.getSource().getEntity();
+            }
 
-                // Quanto maior a porcentagem, maior a força (multiplicador)
-                double knockbackStrength = 0.5 + (newPercent / 50.0);
+            if (sourceEntity != null) {
+                // Calcula a diferença de posição a partir da entidade que REALMENTE encostou (Trem, Bala, etc)
+                double dx = player.getX() - sourceEntity.getX();
+                double dz = player.getZ() - sourceEntity.getZ();
+
+                // Se estiver exatamente no mesmo lugar, dá uma direção padrão aleatória para evitar NaN
+                if (Math.abs(dx) < 0.001 && Math.abs(dz) < 0.001) {
+                    dx = 0.1;
+                    dz = 0.1;
+                }
+
+                // FÓRMULA BUFFADA: Base maior (0.8) e divisor menor (35.0) para voar MUITO mais!
+                double knockbackStrength = 0.8 + (newPercent / 35.0);
 
                 player.knockback(knockbackStrength, -dx, -dz);
 
-                // Adiciona um empurrão para cima baseado na porcentagem (Smash Bros style)
-                player.setDeltaMovement(player.getDeltaMovement().add(0, 0.1 + (newPercent / 300.0), 0));
+                // Empurrão vertical buffado também para garantir que saia do chão fácil
+                player.setDeltaMovement(player.getDeltaMovement().add(0, 0.2 + (newPercent / 200.0), 0));
                 player.hurtMarked = true;
             }
 
@@ -1088,12 +1115,8 @@ public class AbilityEvents {
     @SubscribeEvent
     public static void onPlayerFall(LivingFallEvent event) {
         if (event.getEntity() instanceof Player player && !player.level().isClientSide()) {
-            if (CREEPER_ARMED_PLAYERS.contains(player.getUUID()) || CHICKEN_BOMBERS.containsKey(player.getUUID())) {
-                boolean wasCreeper = CREEPER_ARMED_PLAYERS.remove(player.getUUID());
-                if (wasCreeper) {
-                    player.level().explode(player, player.getX(), player.getY(), player.getZ(), 3.0F, false,
-                            Level.ExplosionInteraction.NONE);
-                }
+            if (CHICKEN_BOMBERS.containsKey(player.getUUID())) {
+                // Galinha ainda precisa cancelar o dano de queda da bomba
                 event.setCanceled(true);
             }
         }

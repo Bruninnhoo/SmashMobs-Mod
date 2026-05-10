@@ -38,7 +38,7 @@ import software.bernie.geckolib.renderer.layer.builtin.CustomBoneTextureGeoLayer
 import java.util.function.Consumer;
 import java.util.function.BiConsumer;
  
-public class SkeletonSniperItem extends Item implements GeoItem {
+public class SkeletonSniperItem extends SmashMobItemBase implements GeoItem {
     private final AnimatableInstanceCache cache = GeckoLibUtil.createInstanceCache(this);
  
     public SkeletonSniperItem(Properties properties) {
@@ -179,3 +179,4 @@ public class SkeletonSniperItem extends Item implements GeoItem {
         return InteractionResult.SUCCESS;
     }
 }
+

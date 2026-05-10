@@ -50,7 +50,22 @@ public class SkeletonMorph extends PathfinderMob implements GeoEntity {
 
     @Override
     public boolean isPickable() {
+        return false; // Holograma Total
+    }
+
+    @Override
+    public boolean isAttackable() {
         return false;
+    }
+
+    @Override
+    public boolean canBeCollidedWith(Entity entity) {
+        return false;
+    }
+
+    @Override
+    public boolean skipAttackInteraction(Entity entity) {
+        return true;
     }
 
     @Override

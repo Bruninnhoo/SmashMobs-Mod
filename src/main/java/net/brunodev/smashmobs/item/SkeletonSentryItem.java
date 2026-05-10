@@ -8,7 +8,7 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
  
-public class SkeletonSentryItem extends Item {
+public class SkeletonSentryItem extends SmashMobItemBase {
     public SkeletonSentryItem(Properties properties) {
         super(properties);
     }
@@ -29,3 +29,4 @@ public class SkeletonSentryItem extends Item {
         return InteractionResult.SUCCESS;
     }
 }
+

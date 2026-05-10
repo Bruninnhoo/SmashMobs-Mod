@@ -6,6 +6,16 @@ import net.minecraft.world.entity.item.PrimedTnt;
 import net.minecraft.world.level.Level;
 
 public class SmashTntEntity extends PrimedTnt {
+    private net.minecraft.world.entity.LivingEntity owner;
+
+    public void setOwner(net.minecraft.world.entity.LivingEntity owner) {
+        this.owner = owner;
+    }
+
+    @Override
+    public net.minecraft.world.entity.LivingEntity getOwner() {
+        return this.owner;
+    }
 
     public SmashTntEntity(EntityType<? extends SmashTntEntity> type, Level level) {
         super(type, level);

@@ -51,7 +51,7 @@ public class AirstrikeJetEntity extends Projectile implements GeoEntity {
         // Spawns a line of explosions right below the jet, on the ground level.
         // We do this by sending a raycast downwards or just scanning for top block.
         BlockPos top = this.level().getHeightmapPos(Heightmap.Types.MOTION_BLOCKING, this.blockPosition());
-        this.level().explode(this.getOwner(), top.getX(), top.getY(), top.getZ(), 3.5F, false, Level.ExplosionInteraction.NONE);
+        this.level().explode(this.getOwner(), top.getX(), top.getY(), top.getZ(), 5.0F, false, Level.ExplosionInteraction.NONE);
         
         if (this.level() instanceof ServerLevel sl) {
             sl.sendParticles(ParticleTypes.EXPLOSION_EMITTER, top.getX(), top.getY(), top.getZ(), 1, 0, 0, 0, 0.0);

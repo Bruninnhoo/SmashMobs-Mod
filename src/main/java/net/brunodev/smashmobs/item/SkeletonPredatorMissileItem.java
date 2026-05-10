@@ -20,7 +20,7 @@ import software.bernie.geckolib.util.GeckoLibUtil;
 
 import java.util.function.Consumer;
 
-public class SkeletonPredatorMissileItem extends Item implements GeoItem {
+public class SkeletonPredatorMissileItem extends SmashMobItemBase implements GeoItem {
     private final AnimatableInstanceCache cache = GeckoLibUtil.createInstanceCache(this);
 
     public SkeletonPredatorMissileItem(Properties properties) {
@@ -65,3 +65,4 @@ public class SkeletonPredatorMissileItem extends Item implements GeoItem {
         return InteractionResult.SUCCESS;
     }
 }
+

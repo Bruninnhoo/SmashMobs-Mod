@@ -7,8 +7,9 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
  
-public class GoatClass {
+public class GoatClass implements ISmashMob {
  
+    @Override
     public void equip(Player player) {
         player.getInventory().clearContent();
  
@@ -19,5 +20,12 @@ public class GoatClass {
         player.setData(ModAttachments.MORPH_DATA, "minecraft:goat");
  
         player.level().playSound(null, player.blockPosition(), SoundEvents.GOAT_AMBIENT, SoundSource.PLAYERS, 1.0F, 1.0F);
+    }
+
+    @Override
+    public void unequip(Player player) {
+        player.getInventory().clearContent();
+        var scaleAttr = player.getAttribute(net.minecraft.world.entity.ai.attributes.Attributes.SCALE);
+        if (scaleAttr != null) scaleAttr.setBaseValue(1.0D);
     }
 }

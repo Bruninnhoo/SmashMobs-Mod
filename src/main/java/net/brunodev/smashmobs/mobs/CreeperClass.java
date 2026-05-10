@@ -32,5 +32,8 @@ public class CreeperClass implements ISmashMob {
     public void unequip(Player player) {
         player.getInventory().clearContent();
         AbilityEvents.CREEPER_SUPREMES.remove(player.getUUID());
+
+        var scaleAttr = player.getAttribute(net.minecraft.world.entity.ai.attributes.Attributes.SCALE);
+        if (scaleAttr != null) scaleAttr.setBaseValue(1.0D);
     }
 }

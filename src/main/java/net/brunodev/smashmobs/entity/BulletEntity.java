@@ -17,7 +17,7 @@ import net.minecraft.world.entity.projectile.ProjectileUtil;
 public class BulletEntity extends Projectile implements GeoEntity {
     private final AnimatableInstanceCache cache = GeckoLibUtil.createInstanceCache(this);
     private int lifeTime = 0;
-    private double damage = 5.0;
+    private double damage = 10.0;
 
     public BulletEntity(EntityType<? extends Projectile> type, Level level) {
         super(type, level);
