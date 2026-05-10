@@ -16,6 +16,11 @@ import software.bernie.geckolib.util.GeckoLibUtil;
 import net.brunodev.smashmobs.SmashMobs;
 
 import java.util.UUID;
+import java.util.Comparator;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.MoverType;
 
 public class SentryGunEntity extends PathfinderMob implements GeoEntity {
     private final AnimatableInstanceCache cache = GeckoLibUtil.createInstanceCache(this);
@@ -56,7 +61,7 @@ public class SentryGunEntity extends PathfinderMob implements GeoEntity {
             // Find target
             var targetCandidate = this.level().getEntitiesOfClass(LivingEntity.class, this.getBoundingBox().inflate(16.0),
                 e -> e != this && e.isAlive() && !e.getUUID().equals(ownerUUID)
-            ).stream().min(java.util.Comparator.comparingDouble(e -> e.distanceTo(this)));
+            ).stream().min(Comparator.comparingDouble(e -> e.distanceTo(this)));
 
             if (targetCandidate.isPresent()) {
                 LivingEntity target = targetCandidate.get();
@@ -89,16 +94,16 @@ public class SentryGunEntity extends PathfinderMob implements GeoEntity {
             if (p != null) bullet.setOwner(p);
         }
         this.level().addFreshEntity(bullet);
-        this.level().playSound(null, this.blockPosition(), net.minecraft.sounds.SoundEvents.ARROW_SHOOT, net.minecraft.sounds.SoundSource.PLAYERS, 1.0F, 1.5F);
+        this.level().playSound(null, this.blockPosition(), SoundEvents.ARROW_SHOOT, SoundSource.PLAYERS, 1.0F, 1.5F);
     }
 
     @Override
-    public void push(net.minecraft.world.entity.Entity entityIn) {
+    public void push(Entity entityIn) {
         // Do not allow other entities to push this sentry gun away
     }
 
     @Override
-    protected void doPush(net.minecraft.world.entity.Entity entityIn) {
+    protected void doPush(Entity entityIn) {
         // Do not allow this entity to push other entities
     }
 
@@ -116,7 +121,7 @@ public class SentryGunEntity extends PathfinderMob implements GeoEntity {
     public void travel(Vec3 travelVector) {
         // Stationary movement logic. Only process natural falling/gravity.
         if (this.isEffectiveAi()) {
-            this.move(net.minecraft.world.entity.MoverType.SELF, new Vec3(0, this.getDeltaMovement().y, 0));
+            this.move(MoverType.SELF, new Vec3(0, this.getDeltaMovement().y, 0));
         }
     }
 

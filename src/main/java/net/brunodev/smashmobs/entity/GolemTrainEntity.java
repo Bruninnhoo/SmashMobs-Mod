@@ -11,6 +11,8 @@ import software.bernie.geckolib.animatable.GeoEntity;
 import software.bernie.geckolib.animatable.instance.AnimatableInstanceCache;
 import software.bernie.geckolib.animatable.manager.AnimatableManager;
 import software.bernie.geckolib.util.GeckoLibUtil;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -73,8 +75,8 @@ public class GolemTrainEntity extends Projectile implements GeoEntity {
                 if (!draggedVictims.contains(target)) {
                     draggedVictims.add(target);
                     this.level().playSound(null, this.blockPosition(),
-                            net.minecraft.sounds.SoundEvents.ZOMBIE_ATTACK_IRON_DOOR,
-                            net.minecraft.sounds.SoundSource.PLAYERS, 2.0F, 0.5F);
+                            SoundEvents.ZOMBIE_ATTACK_IRON_DOOR,
+                            SoundSource.PLAYERS, 2.0F, 0.5F);
                 }
             }
 
@@ -97,8 +99,8 @@ public class GolemTrainEntity extends Projectile implements GeoEntity {
                     }
                 }
                 this.level().playSound(null, this.blockPosition(),
-                        net.minecraft.sounds.SoundEvents.GENERIC_EXPLODE.value(),
-                        net.minecraft.sounds.SoundSource.PLAYERS, 2.0F, 0.5F);
+                        SoundEvents.GENERIC_EXPLODE.value(),
+                        SoundSource.PLAYERS, 2.0F, 0.5F);
                 this.discard();
             }
         }

@@ -2,15 +2,17 @@ package net.brunodev.smashmobs;
 
 import net.brunodev.smashmobs.client.ClientEvents;
 import net.brunodev.smashmobs.client.ClientModEvents;
-import net.brunodev.smashmobs.entity.GolemTrainEntity;
-import net.brunodev.smashmobs.entity.IronGolemMorph;
-import net.brunodev.smashmobs.entity.SmashTntEntity;
-import net.brunodev.smashmobs.item.*;
 import net.brunodev.smashmobs.registration.ModAttachments;
 import net.minecraft.sounds.SoundEvent;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.MobCategory;
+import net.minecraft.world.entity.Mob;
+import net.neoforged.neoforge.event.entity.EntityAttributeCreationEvent;
 import org.slf4j.Logger;
+import net.brunodev.smashmobs.entity.*;
+import net.brunodev.smashmobs.item.*;
 
 import com.mojang.logging.LogUtils;
 
@@ -61,22 +63,22 @@ public class SmashMobs {
 
         // =-=-=-==-= CREEPER =-=-=-==-=
         public static final DeferredItem<CreeperExplosionItem> CREEPER_EXPLOSION = ITEMS.registerItem(
-                        "creeper_explosion", p -> new net.brunodev.smashmobs.item.CreeperExplosionItem(p.stacksTo(1)));
+                        "creeper_explosion", p -> new CreeperExplosionItem(p.stacksTo(1)));
 
         public static final DeferredItem<CreeperThrowTntItem> CREEPER_THROW_TNT = ITEMS.registerItem(
                         "throw_tnt", p -> new CreeperThrowTntItem(p.stacksTo(1)));
 
-        public static final net.neoforged.neoforge.registries.DeferredItem<CreeperSupremeItem> CREEPER_SUPREME = ITEMS
+        public static final DeferredItem<CreeperSupremeItem> CREEPER_SUPREME = ITEMS
                         .registerItem(
                                         "creeper_supreme",
-                                        p -> new net.brunodev.smashmobs.item.CreeperSupremeItem(p.stacksTo(1)));
+                                        p -> new CreeperSupremeItem(p.stacksTo(1)));
 
         public static final DeferredHolder<EntityType<?>, EntityType<SmashTntEntity>> SMASH_TNT = ENTITIES.register(
                         "smash_tnt",
                         (identifier) -> EntityType.Builder.<SmashTntEntity>of(SmashTntEntity::new, MobCategory.MISC)
                                         .sized(0.98F, 0.98F)
                                         .fireImmune()
-                                        .build(net.minecraft.resources.ResourceKey.create(Registries.ENTITY_TYPE,
+                                        .build(ResourceKey.create(Registries.ENTITY_TYPE,
                                                         identifier)));
 
         public static final Supplier<SoundEvent> CREEPER_LAUNCH_SOUND = SOUNDS.register("creeper_launch",
@@ -87,81 +89,81 @@ public class SmashMobs {
                         "golem_throw_anvil", p -> new GolemAnvilItem(p.stacksTo(1)));
 
         public static final DeferredItem<GolemGrabItem> GOLEM_GRAB = ITEMS.registerItem(
-                        "golem_grab", p -> new net.brunodev.smashmobs.item.GolemGrabItem(p.stacksTo(1)));
+                        "golem_grab", p -> new GolemGrabItem(p.stacksTo(1)));
 
         public static final DeferredItem<GolemUltItem> GOLEM_SUPREME = ITEMS.registerItem(
-                        "golem_supreme", p -> new net.brunodev.smashmobs.item.GolemUltItem(p.stacksTo(1)));
+                        "golem_supreme", p -> new GolemUltItem(p.stacksTo(1)));
 
         // Registra a Entidade do Trem
         public static final Supplier<EntityType<GolemTrainEntity>> GOLEM_TRAIN = ENTITIES.register("golem_train",
-                        (net.minecraft.resources.Identifier identifier) -> EntityType.Builder
-                                        .of(net.brunodev.smashmobs.entity.GolemTrainEntity::new,
-                                                        net.minecraft.world.entity.MobCategory.MISC)
+                        (Identifier identifier) -> EntityType.Builder
+                                        .of(GolemTrainEntity::new,
+                                                        MobCategory.MISC)
                                         .sized(3.0F, 3.0F) // O trem é gigante (3x3 blocos)
                                         .clientTrackingRange(10)
                                         .updateInterval(1)
-                                        .build(net.minecraft.resources.ResourceKey.create(
-                                                        net.minecraft.core.registries.Registries.ENTITY_TYPE,
+                                        .build(ResourceKey.create(
+                                                        Registries.ENTITY_TYPE,
                                                         identifier)));
 
         public static final DeferredHolder<EntityType<?>, EntityType<IronGolemMorph>> IRON_GOLEM_MORPH = ENTITIES
                         .register("iron_golem_morph", (
-                                        identifier) -> EntityType.Builder.<net.brunodev.smashmobs.entity.IronGolemMorph>of(
-                                                        net.brunodev.smashmobs.entity.IronGolemMorph::new,
+                                        identifier) -> EntityType.Builder.<IronGolemMorph>of(
+                                                        IronGolemMorph::new,
                                                         MobCategory.MISC)
                                                         .sized(1.4F, 2.7F)
-                                                        .build(net.minecraft.resources.ResourceKey
+                                                        .build(ResourceKey
                                                                         .create(Registries.ENTITY_TYPE, identifier)));
 
-        public static final DeferredHolder<EntityType<?>, EntityType<net.brunodev.smashmobs.entity.SkeletonMorph>> SKELETON_MORPH = ENTITIES
+        public static final DeferredHolder<EntityType<?>, EntityType<SkeletonMorph>> SKELETON_MORPH = ENTITIES
                         .register("skeleton_morph", (
-                                        identifier) -> EntityType.Builder.<net.brunodev.smashmobs.entity.SkeletonMorph>of(
-                                                        net.brunodev.smashmobs.entity.SkeletonMorph::new,
+                                        identifier) -> EntityType.Builder.<SkeletonMorph>of(
+                                                        SkeletonMorph::new,
                                                         MobCategory.MISC)
                                                         .sized(0.6F, 1.99F)
-                                                        .build(net.minecraft.resources.ResourceKey
+                                                        .build(ResourceKey
                                                                         .create(Registries.ENTITY_TYPE, identifier)));
 
-        public static final Supplier<EntityType<net.brunodev.smashmobs.entity.BulletEntity>> BULLET = ENTITIES.register("bullet",
-                        (net.minecraft.resources.Identifier identifier) -> EntityType.Builder
-                                        .of(net.brunodev.smashmobs.entity.BulletEntity::new,
-                                                        net.minecraft.world.entity.MobCategory.MISC)
+        public static final Supplier<EntityType<BulletEntity>> BULLET = ENTITIES.register("bullet",
+                        (Identifier identifier) -> EntityType.Builder
+                                        .of(BulletEntity::new,
+                                                        MobCategory.MISC)
                                         .sized(0.3F, 0.3F)
                                         .clientTrackingRange(10)
                                         .updateInterval(1)
-                                        .build(net.minecraft.resources.ResourceKey.create(
-                                                        net.minecraft.core.registries.Registries.ENTITY_TYPE,
+                                        .build(ResourceKey.create(
+                                                        Registries.ENTITY_TYPE,
                                                         identifier)));
 
-        public static final Supplier<EntityType<net.brunodev.smashmobs.entity.PredatorMissileEntity>> PREDATOR_MISSILE = ENTITIES.register("predator_missile",
-                        (net.minecraft.resources.Identifier identifier) -> EntityType.Builder
-                                        .of(net.brunodev.smashmobs.entity.PredatorMissileEntity::new,
-                                                        net.minecraft.world.entity.MobCategory.MISC)
+        public static final Supplier<EntityType<PredatorMissileEntity>> PREDATOR_MISSILE = ENTITIES.register("predator_missile",
+                        (Identifier identifier) -> EntityType.Builder
+                                        .of(PredatorMissileEntity::new,
+                                                        MobCategory.MISC)
                                         .sized(1.0F, 1.0F)
                                         .clientTrackingRange(10)
                                         .updateInterval(1)
-                                        .build(net.minecraft.resources.ResourceKey.create(
-                                                        net.minecraft.core.registries.Registries.ENTITY_TYPE,
+                                        .build(ResourceKey.create(
+                                                        Registries.ENTITY_TYPE,
                                                         identifier)));
 
-        public static final Supplier<EntityType<net.brunodev.smashmobs.entity.AirstrikeJetEntity>> AIRSTRIKE_JET = ENTITIES.register("airstrike_jet",
-                        (net.minecraft.resources.Identifier identifier) -> EntityType.Builder
-                                        .of(net.brunodev.smashmobs.entity.AirstrikeJetEntity::new,
-                                                        net.minecraft.world.entity.MobCategory.MISC)
+        public static final Supplier<EntityType<AirstrikeJetEntity>> AIRSTRIKE_JET = ENTITIES.register("airstrike_jet",
+                        (Identifier identifier) -> EntityType.Builder
+                                        .of(AirstrikeJetEntity::new,
+                                                        MobCategory.MISC)
                                         .sized(5.0F, 1.0F)
                                         .clientTrackingRange(32)
                                         .updateInterval(1)
-                                        .build(net.minecraft.resources.ResourceKey.create(
-                                                        net.minecraft.core.registries.Registries.ENTITY_TYPE,
+                                        .build(ResourceKey.create(
+                                                        Registries.ENTITY_TYPE,
                                                         identifier)));
 
-        public static final Supplier<EntityType<net.brunodev.smashmobs.entity.SentryGunEntity>> SENTRY_GUN = ENTITIES.register("sentry_gun",
-                        (net.minecraft.resources.Identifier identifier) -> EntityType.Builder
-                                        .of(net.brunodev.smashmobs.entity.SentryGunEntity::new,
-                                                        net.minecraft.world.entity.MobCategory.MISC)
+        public static final Supplier<EntityType<SentryGunEntity>> SENTRY_GUN = ENTITIES.register("sentry_gun",
+                        (Identifier identifier) -> EntityType.Builder
+                                        .of(SentryGunEntity::new,
+                                                        MobCategory.MISC)
                                         .sized(0.8F, 1.2F)
-                                        .build(net.minecraft.resources.ResourceKey.create(
-                                                        net.minecraft.core.registries.Registries.ENTITY_TYPE,
+                                        .build(ResourceKey.create(
+                                                        Registries.ENTITY_TYPE,
                                                         identifier)));
 
         public static final Supplier<SoundEvent> GOLEM_THROW_ANVIL_SOUND = SOUNDS.register("golem_throw_anvil",
@@ -194,11 +196,11 @@ public class SmashMobs {
         public static final DeferredItem<SkeletonSniperItem> SKELETON_SNIPER = ITEMS.registerItem(
                         "skeleton_sniper", p -> new SkeletonSniperItem(p.stacksTo(1)));
 
-        public static final DeferredItem<net.brunodev.smashmobs.item.SkeletonBoomerangItem> SKELETON_BOOMERANG = ITEMS.registerItem(
-                        "skeleton_boomerang", p -> new net.brunodev.smashmobs.item.SkeletonBoomerangItem(p.stacksTo(1)));
+        public static final DeferredItem<SkeletonBoomerangItem> SKELETON_BOOMERANG = ITEMS.registerItem(
+                        "skeleton_boomerang", p -> new SkeletonBoomerangItem(p.stacksTo(1)));
 
-        public static final DeferredItem<net.brunodev.smashmobs.item.SkeletonUltItem> SKELETON_ULTIMATE = ITEMS.registerItem(
-                        "skeleton_ultimate", p -> new net.brunodev.smashmobs.item.SkeletonUltItem(p.stacksTo(1)));
+        public static final DeferredItem<SkeletonUltItem> SKELETON_ULTIMATE = ITEMS.registerItem(
+                        "skeleton_ultimate", p -> new SkeletonUltItem(p.stacksTo(1)));
 
         public static final Supplier<SoundEvent> SKELETON_SHOOT_SOUND = SOUNDS.register("skelleton_shoot",
                         SoundEvent::createVariableRangeEvent);
@@ -253,10 +255,10 @@ public class SmashMobs {
                 }
         }
 
-        private void registerAttributes(net.neoforged.neoforge.event.entity.EntityAttributeCreationEvent event) {
-                event.put(IRON_GOLEM_MORPH.get(), net.minecraft.world.entity.Mob.createMobAttributes().build());
-                event.put(SKELETON_MORPH.get(), net.minecraft.world.entity.Mob.createMobAttributes().build());
-                event.put(SENTRY_GUN.get(), net.brunodev.smashmobs.entity.SentryGunEntity.createAttributes().build());
+        private void registerAttributes(EntityAttributeCreationEvent event) {
+                event.put(IRON_GOLEM_MORPH.get(), Mob.createMobAttributes().build());
+                event.put(SKELETON_MORPH.get(), Mob.createMobAttributes().build());
+                event.put(SENTRY_GUN.get(), SentryGunEntity.createAttributes().build());
         }
 
         @SubscribeEvent

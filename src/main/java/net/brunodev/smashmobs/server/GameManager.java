@@ -9,6 +9,8 @@ import net.minecraft.world.scores.Objective;
 import net.minecraft.world.scores.Scoreboard;
 import net.minecraft.world.scores.criteria.ObjectiveCriteria;
 import net.minecraft.world.scores.DisplaySlot;
+import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.world.entity.item.FallingBlockEntity;
 
 public class GameManager {
 
@@ -73,23 +75,23 @@ public class GameManager {
         }
 
         // Limpa as minas da galinha
-        for (net.minecraft.world.entity.item.ItemEntity mine : net.brunodev.smashmobs.server.AbilityEvents.CHICKEN_MINES.keySet()) {
+        for (ItemEntity mine : AbilityEvents.CHICKEN_MINES.keySet()) {
             if (mine != null && mine.isAlive()) {
                 mine.discard(); // Deleta a mina do mundo
             }
         }
-        net.brunodev.smashmobs.server.AbilityEvents.CHICKEN_MINES.clear();
+        AbilityEvents.CHICKEN_MINES.clear();
         
         // Limpa bigornas
-        for (net.minecraft.world.entity.item.FallingBlockEntity anvil : net.brunodev.smashmobs.server.AbilityEvents.FLYING_ANVILS.keySet()) {
+        for (FallingBlockEntity anvil : AbilityEvents.FLYING_ANVILS.keySet()) {
             if (anvil != null && anvil.isAlive()) {
                 anvil.discard();
             }
         }
-        net.brunodev.smashmobs.server.AbilityEvents.FLYING_ANVILS.clear();
+        AbilityEvents.FLYING_ANVILS.clear();
         
         // Limpa poderes do esqueleto
-        net.brunodev.smashmobs.server.AbilityEvents.FLYING_BONES.clear();
-        net.brunodev.smashmobs.server.AbilityEvents.ARROW_STORMS.clear();
+        AbilityEvents.FLYING_BONES.clear();
+        AbilityEvents.ARROW_STORMS.clear();
     }
 }

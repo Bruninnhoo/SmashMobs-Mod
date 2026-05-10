@@ -9,6 +9,10 @@ import software.bernie.geckolib.animatable.GeoEntity;
 import software.bernie.geckolib.animatable.instance.AnimatableInstanceCache;
 import software.bernie.geckolib.animatable.manager.AnimatableManager;
 import software.bernie.geckolib.util.GeckoLibUtil;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.levelgen.Heightmap;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.core.particles.ParticleTypes;
 
 public class AirstrikeJetEntity extends Projectile implements GeoEntity {
     private final AnimatableInstanceCache cache = GeckoLibUtil.createInstanceCache(this);
@@ -46,11 +50,11 @@ public class AirstrikeJetEntity extends Projectile implements GeoEntity {
     private void dropBomb() {
         // Spawns a line of explosions right below the jet, on the ground level.
         // We do this by sending a raycast downwards or just scanning for top block.
-        net.minecraft.core.BlockPos top = this.level().getHeightmapPos(net.minecraft.world.level.levelgen.Heightmap.Types.MOTION_BLOCKING, this.blockPosition());
+        BlockPos top = this.level().getHeightmapPos(Heightmap.Types.MOTION_BLOCKING, this.blockPosition());
         this.level().explode(this.getOwner(), top.getX(), top.getY(), top.getZ(), 3.5F, false, Level.ExplosionInteraction.NONE);
         
-        if (this.level() instanceof net.minecraft.server.level.ServerLevel sl) {
-            sl.sendParticles(net.minecraft.core.particles.ParticleTypes.EXPLOSION_EMITTER, top.getX(), top.getY(), top.getZ(), 1, 0, 0, 0, 0.0);
+        if (this.level() instanceof ServerLevel sl) {
+            sl.sendParticles(ParticleTypes.EXPLOSION_EMITTER, top.getX(), top.getY(), top.getZ(), 1, 0, 0, 0, 0.0);
         }
     }
 

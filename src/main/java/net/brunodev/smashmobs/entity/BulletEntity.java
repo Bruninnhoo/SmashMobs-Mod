@@ -12,6 +12,7 @@ import software.bernie.geckolib.animatable.GeoEntity;
 import software.bernie.geckolib.animatable.instance.AnimatableInstanceCache;
 import software.bernie.geckolib.animatable.manager.AnimatableManager;
 import software.bernie.geckolib.util.GeckoLibUtil;
+import net.minecraft.world.entity.projectile.ProjectileUtil;
 
 public class BulletEntity extends Projectile implements GeoEntity {
     private final AnimatableInstanceCache cache = GeckoLibUtil.createInstanceCache(this);
@@ -46,7 +47,7 @@ public class BulletEntity extends Projectile implements GeoEntity {
         Vec3 nextPos = this.position().add(move);
 
         // Simple manual collision raycast for entities along current move vector
-        var hitResult = net.minecraft.world.entity.projectile.ProjectileUtil.getHitResultOnMoveVector(this, e -> !e.isSpectator() && e.isAlive() && e != this.getOwner());
+        var hitResult = ProjectileUtil.getHitResultOnMoveVector(this, e -> !e.isSpectator() && e.isAlive() && e != this.getOwner());
         if (hitResult.getType() != HitResult.Type.MISS) {
             this.onHit(hitResult);
         }

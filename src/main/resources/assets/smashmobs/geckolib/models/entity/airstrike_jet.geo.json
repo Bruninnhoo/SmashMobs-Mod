@@ -4,9 +4,9 @@
 		{
 			"description": {
 				"identifier": "geometry.unknown",
-				"texture_width": 256,
-				"texture_height": 256,
-				"visible_bounds_width": 10,
+				"texture_width": 202,
+				"texture_height": 202,
+				"visible_bounds_width": 11,
 				"visible_bounds_height": 1.5,
 				"visible_bounds_offset": [0, 0.25, 0]
 			},
@@ -15,14 +15,12 @@
 					"name": "UAV",
 					"pivot": [0, 0, 0],
 					"cubes": [
-						{"origin": [-56, 0, 1], "size": [112, 3, 14], "uv": [0, 0]},
-						{"origin": [-15, 0, -61], "size": [32, 3, 62], "uv": [0, 17]},
-						{"origin": [9, 0, -32], "size": [25, 3, 33], "uv": [0, 116]},
-						{"origin": [-33, 0, -35], "size": [18, 3, 36], "uv": [116, 116]},
-						{"origin": [-39, 0, -8], "size": [7, 3, 9], "uv": [0, 152]},
-						{"origin": [32, 0, -8], "size": [7, 3, 9], "uv": [32, 152]},
-						{"origin": [-58.5, 0, -0.9], "size": [98, 3, 14], "pivot": [-55.5, 0, -1.9], "rotation": [0, 57.5, 0], "uv": [0, 82]},
-						{"origin": [-24.18373, 0, -43.08692], "size": [97, 3, 14], "pivot": [24.31627, 1.5, -36.08692], "rotation": [0, 57.5, -180], "uv": [0, 99]}
+						{"origin": [-96.27499, 0, -24.58142], "size": [97, 2, 4], "pivot": [0, 1, -22], "rotation": [0, 140, 0], "uv": [0, 68]},
+						{"origin": [-96.27499, 0, -23.41858], "size": [97, 2, 4], "inflate": 0.01, "pivot": [0, 1, -22], "rotation": [0, 40, 0], "uv": [0, 75]},
+						{"origin": [-0.75, 0, -23.75], "size": [1.5, 2, 1.5], "inflate": 0.02, "pivot": [0, 0, -23], "rotation": [0, 42.5, 0], "uv": [97, 109]},
+						{"origin": [-45.8, 0, -28], "size": [25, 2, 65], "inflate": -0.01, "pivot": [-32.8, 0, 25], "rotation": [0, -50, 0], "uv": [0, 0]},
+						{"origin": [-20.8, 0, 12], "size": [66, 2, 25], "inflate": 0.01, "pivot": [33.2, 0, 25], "rotation": [0, -39.5, 0], "uv": [-1, 81]},
+						{"origin": [-11.4, 0, 13], "size": [24, 2, 24], "pivot": [0.6, 0, 25], "rotation": [0, -42.5, 0], "uv": [0, 109]}
 					]
 				}
 			]

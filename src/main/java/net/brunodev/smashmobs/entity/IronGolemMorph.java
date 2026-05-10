@@ -1,5 +1,6 @@
 package net.brunodev.smashmobs.entity;
 
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.PathfinderMob;
 import net.minecraft.world.level.Level;
@@ -62,6 +63,6 @@ public class IronGolemMorph extends PathfinderMob implements GeoEntity {
     }
 
     @Override
-    protected void doPush(net.minecraft.world.entity.Entity entity) {
+    protected void doPush(Entity entity) {
     }
 }

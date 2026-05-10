@@ -10,6 +10,8 @@ import software.bernie.geckolib.animatable.GeoEntity;
 import software.bernie.geckolib.animatable.instance.AnimatableInstanceCache;
 import software.bernie.geckolib.animatable.manager.AnimatableManager;
 import software.bernie.geckolib.util.GeckoLibUtil;
+import net.minecraft.world.entity.projectile.ProjectileUtil;
+import net.minecraft.core.particles.ParticleTypes;
 
 public class PredatorMissileEntity extends Projectile implements GeoEntity {
     private final AnimatableInstanceCache cache = GeckoLibUtil.createInstanceCache(this);
@@ -30,8 +32,8 @@ public class PredatorMissileEntity extends Projectile implements GeoEntity {
 
         Vec3 move = this.getDeltaMovement();
         Vec3 nextPos = this.position().add(move);
-
-        var hitResult = net.minecraft.world.entity.projectile.ProjectileUtil.getHitResultOnMoveVector(this, e -> !e.isSpectator() && e.isAlive() && e != this.getOwner());
+ 
+        var hitResult = ProjectileUtil.getHitResultOnMoveVector(this, e -> !e.isSpectator() && e.isAlive() && e != this.getOwner());
         if (hitResult.getType() != HitResult.Type.MISS) {
             this.onHit(hitResult);
         }
@@ -39,7 +41,7 @@ public class PredatorMissileEntity extends Projectile implements GeoEntity {
         this.setPos(nextPos);
 
         if (this.level().isClientSide()) {
-            this.level().addParticle(net.minecraft.core.particles.ParticleTypes.LARGE_SMOKE, this.getX(), this.getY(), this.getZ(), 0, 0.1, 0);
+            this.level().addParticle(ParticleTypes.LARGE_SMOKE, this.getX(), this.getY(), this.getZ(), 0, 0.1, 0);
         }
         
         if (this.tickCount > 200) this.discard();
