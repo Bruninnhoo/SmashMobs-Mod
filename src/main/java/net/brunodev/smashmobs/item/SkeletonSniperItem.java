@@ -28,7 +28,15 @@ import software.bernie.geckolib.renderer.base.GeoRenderState;
 import software.bernie.geckolib.renderer.base.RenderPassInfo;
 import software.bernie.geckolib.util.GeckoLibUtil;
  
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.resources.DefaultPlayerSkin;
+import net.minecraft.client.renderer.SubmitNodeCollector;
+import software.bernie.geckolib.cache.model.GeoBone;
+import software.bernie.geckolib.renderer.base.PerBoneRender;
+import software.bernie.geckolib.renderer.layer.builtin.CustomBoneTextureGeoLayer;
+ 
 import java.util.function.Consumer;
+import java.util.function.BiConsumer;
  
 public class SkeletonSniperItem extends Item implements GeoItem {
     private final AnimatableInstanceCache cache = GeckoLibUtil.createInstanceCache(this);
@@ -60,44 +68,84 @@ public class SkeletonSniperItem extends Item implements GeoItem {
             @Override
             public GeoItemRenderer<SkeletonSniperItem> getGeoItemRenderer() {
                 if (this.renderer == null) {
-                    this.renderer = new GeoItemRenderer<>(new DefaultedItemGeoModel<>(Identifier.parse("smashmobs:awp"))) {
+                    GeoItemRenderer<SkeletonSniperItem> r = new GeoItemRenderer<>(new DefaultedItemGeoModel<>(Identifier.parse("smashmobs:awp"))) {
                         @Override
                         public void adjustRenderPose(RenderPassInfo<GeoRenderState> info) {
                             super.adjustRenderPose(info);
                             ItemDisplayContext perspective = info.getGeckolibData(DataTickets.ITEM_RENDER_PERSPECTIVE);
                             boolean isFirstPerson = perspective == ItemDisplayContext.FIRST_PERSON_RIGHT_HAND || perspective == ItemDisplayContext.FIRST_PERSON_LEFT_HAND;
                             
-                            info.model().getBone("rightArm").ifPresentOrElse(bone -> {
-                                if (bone.frameSnapshot == null) {
-                                    bone.frameSnapshot = BoneSnapshot.create(bone);
-                                }
-                                bone.frameSnapshot.skipRender(!isFirstPerson);
-                                bone.frameSnapshot.skipChildrenRender(!isFirstPerson);
-                                if (!isFirstPerson) {
+                            // Forçamos escala 0 caso NÃO esteja em primeira pessoa no render pass principal
+                            if (!isFirstPerson) {
+                                info.model().getBone("rightArm").ifPresent(bone -> {
+                                    if (bone.frameSnapshot == null) bone.frameSnapshot = BoneSnapshot.create(bone);
                                     bone.frameSnapshot.setScale(0, 0, 0);
-                                } else {
-                                    bone.frameSnapshot.setScale(1, 1, 1);
-                                }
-                            }, () -> {
-                                // bone not found
-                            });
-                            
-                            info.model().getBone("leftArm").ifPresentOrElse(bone -> {
-                                if (bone.frameSnapshot == null) {
-                                    bone.frameSnapshot = BoneSnapshot.create(bone);
-                                }
-                                bone.frameSnapshot.skipRender(!isFirstPerson);
-                                bone.frameSnapshot.skipChildrenRender(!isFirstPerson);
-                                if (!isFirstPerson) {
+                                });
+                                info.model().getBone("leftArm").ifPresent(bone -> {
+                                    if (bone.frameSnapshot == null) bone.frameSnapshot = BoneSnapshot.create(bone);
                                     bone.frameSnapshot.setScale(0, 0, 0);
-                                } else {
-                                    bone.frameSnapshot.setScale(1, 1, 1);
-                                }
-                            }, () -> {
-                                // bone not found
-                            });
+                                });
+                            }
                         }
                     };
+ 
+                    // Adiciona o Renderer do Braço DIREITO com textura dinâmica
+                    r.withRenderLayer(new CustomBoneTextureGeoLayer<>(r, "rightArm", Identifier.parse("minecraft:missing_no")) {
+                        @Override
+                        protected Identifier getTextureResource(GeoRenderState renderState) {
+                             var mc = Minecraft.getInstance();
+                             if (mc.player != null) {
+                                 return mc.player.getSkin().body().id();
+                             }
+                             return DefaultPlayerSkin.getDefaultSkin().body().id();
+                        }
+ 
+                        @Override
+                        public void preRender(RenderPassInfo<GeoRenderState> renderPassInfo, SubmitNodeCollector renderTasks) {
+                            ItemDisplayContext perspective = renderPassInfo.renderState().getGeckolibData(DataTickets.ITEM_RENDER_PERSPECTIVE);
+                            boolean isFirstPerson = perspective == ItemDisplayContext.FIRST_PERSON_RIGHT_HAND || perspective == ItemDisplayContext.FIRST_PERSON_LEFT_HAND;
+                            if (!isFirstPerson) return; // Se não for 1º pessoa, ignora
+                            super.preRender(renderPassInfo, renderTasks);
+                        }
+ 
+                        @Override
+                        public void addPerBoneRender(RenderPassInfo<GeoRenderState> renderPassInfo, BiConsumer<GeoBone, PerBoneRender<GeoRenderState>> consumer) {
+                            ItemDisplayContext perspective = renderPassInfo.renderState().getGeckolibData(DataTickets.ITEM_RENDER_PERSPECTIVE);
+                            boolean isFirstPerson = perspective == ItemDisplayContext.FIRST_PERSON_RIGHT_HAND || perspective == ItemDisplayContext.FIRST_PERSON_LEFT_HAND;
+                            if (!isFirstPerson) return; // Não renderiza a layer se não estiver em 1º pessoa
+                            super.addPerBoneRender(renderPassInfo, consumer);
+                        }
+                    });
+ 
+                    // Adiciona o Renderer do Braço ESQUERDO com textura dinâmica
+                    r.withRenderLayer(new CustomBoneTextureGeoLayer<>(r, "leftArm", Identifier.parse("minecraft:missing_no")) {
+                        @Override
+                        protected Identifier getTextureResource(GeoRenderState renderState) {
+                             var mc = Minecraft.getInstance();
+                             if (mc.player != null) {
+                                 return mc.player.getSkin().body().id();
+                             }
+                             return DefaultPlayerSkin.getDefaultSkin().body().id();
+                        }
+ 
+                        @Override
+                        public void preRender(RenderPassInfo<GeoRenderState> renderPassInfo, SubmitNodeCollector renderTasks) {
+                            ItemDisplayContext perspective = renderPassInfo.renderState().getGeckolibData(DataTickets.ITEM_RENDER_PERSPECTIVE);
+                            boolean isFirstPerson = perspective == ItemDisplayContext.FIRST_PERSON_RIGHT_HAND || perspective == ItemDisplayContext.FIRST_PERSON_LEFT_HAND;
+                            if (!isFirstPerson) return;
+                            super.preRender(renderPassInfo, renderTasks);
+                        }
+ 
+                        @Override
+                        public void addPerBoneRender(RenderPassInfo<GeoRenderState> renderPassInfo, BiConsumer<GeoBone, PerBoneRender<GeoRenderState>> consumer) {
+                            ItemDisplayContext perspective = renderPassInfo.renderState().getGeckolibData(DataTickets.ITEM_RENDER_PERSPECTIVE);
+                            boolean isFirstPerson = perspective == ItemDisplayContext.FIRST_PERSON_RIGHT_HAND || perspective == ItemDisplayContext.FIRST_PERSON_LEFT_HAND;
+                            if (!isFirstPerson) return;
+                            super.addPerBoneRender(renderPassInfo, consumer);
+                        }
+                    });
+ 
+                    this.renderer = r;
                 }
                 return this.renderer;
             }

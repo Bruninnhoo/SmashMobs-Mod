@@ -1,0 +1,9 @@
+{
+  "model": {
+    "type": "minecraft:special",
+    "base": "smashmobs:item/skeleton_predator_missile",
+    "model": {
+      "type": "geckolib:geckolib"
+    }
+  }
+}

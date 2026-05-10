@@ -3,24 +3,186 @@
 	"minecraft:geometry": [
 		{
 			"description": {
-				"identifier": "geometry.unknown",
+				"identifier": "geometry.airstrike_jet",
 				"texture_width": 202,
 				"texture_height": 202,
 				"visible_bounds_width": 11,
 				"visible_bounds_height": 1.5,
-				"visible_bounds_offset": [0, 0.25, 0]
+				"visible_bounds_offset": [
+					0,
+					0.25,
+					0
+				]
 			},
 			"bones": [
 				{
 					"name": "UAV",
-					"pivot": [0, 0, 0],
+					"pivot": [
+						0,
+						0,
+						0
+					],
 					"cubes": [
-						{"origin": [-96.27499, 0, -24.58142], "size": [97, 2, 4], "pivot": [0, 1, -22], "rotation": [0, 140, 0], "uv": [0, 68]},
-						{"origin": [-96.27499, 0, -23.41858], "size": [97, 2, 4], "inflate": 0.01, "pivot": [0, 1, -22], "rotation": [0, 40, 0], "uv": [0, 75]},
-						{"origin": [-0.75, 0, -23.75], "size": [1.5, 2, 1.5], "inflate": 0.02, "pivot": [0, 0, -23], "rotation": [0, 42.5, 0], "uv": [97, 109]},
-						{"origin": [-45.8, 0, -28], "size": [25, 2, 65], "inflate": -0.01, "pivot": [-32.8, 0, 25], "rotation": [0, -50, 0], "uv": [0, 0]},
-						{"origin": [-20.8, 0, 12], "size": [66, 2, 25], "inflate": 0.01, "pivot": [33.2, 0, 25], "rotation": [0, -39.5, 0], "uv": [-1, 81]},
-						{"origin": [-11.4, 0, 13], "size": [24, 2, 24], "pivot": [0.6, 0, 25], "rotation": [0, -42.5, 0], "uv": [0, 109]}
+						{
+							"origin": [
+								-96.27499,
+								0,
+								-24.58142
+							],
+							"size": [
+								97,
+								2,
+								4
+							],
+							"pivot": [
+								0,
+								1,
+								-22
+							],
+							"rotation": [
+								0,
+								140,
+								0
+							],
+							"uv": [
+								0,
+								68
+							]
+						},
+						{
+							"origin": [
+								-96.27499,
+								0,
+								-23.41858
+							],
+							"size": [
+								97,
+								2,
+								4
+							],
+							"inflate": 0.01,
+							"pivot": [
+								0,
+								1,
+								-22
+							],
+							"rotation": [
+								0,
+								40,
+								0
+							],
+							"uv": [
+								0,
+								75
+							]
+						},
+						{
+							"origin": [
+								-0.75,
+								0,
+								-23.75
+							],
+							"size": [
+								1.5,
+								2,
+								1.5
+							],
+							"inflate": 0.02,
+							"pivot": [
+								0,
+								0,
+								-23
+							],
+							"rotation": [
+								0,
+								42.5,
+								0
+							],
+							"uv": [
+								97,
+								109
+							]
+						},
+						{
+							"origin": [
+								-45.8,
+								0,
+								-28
+							],
+							"size": [
+								25,
+								2,
+								65
+							],
+							"inflate": -0.01,
+							"pivot": [
+								-32.8,
+								0,
+								25
+							],
+							"rotation": [
+								0,
+								-50,
+								0
+							],
+							"uv": [
+								0,
+								0
+							]
+						},
+						{
+							"origin": [
+								-20.8,
+								0,
+								12
+							],
+							"size": [
+								66,
+								2,
+								25
+							],
+							"inflate": 0.01,
+							"pivot": [
+								33.2,
+								0,
+								25
+							],
+							"rotation": [
+								0,
+								-39.5,
+								0
+							],
+							"uv": [
+								-1,
+								81
+							]
+						},
+						{
+							"origin": [
+								-11.4,
+								0,
+								13
+							],
+							"size": [
+								24,
+								2,
+								24
+							],
+							"pivot": [
+								0.6,
+								0,
+								25
+							],
+							"rotation": [
+								0,
+								-42.5,
+								0
+							],
+							"uv": [
+								0,
+								109
+							]
+						}
 					]
 				}
 			]

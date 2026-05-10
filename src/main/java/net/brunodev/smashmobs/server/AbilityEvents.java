@@ -33,7 +33,7 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.scores.Scoreboard;
 import net.minecraft.world.scores.Objective;
-
+import net.minecraft.world.damagesource.DamageTypes;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.entity.living.LivingFallEvent;
@@ -60,7 +60,7 @@ public class AbilityEvents {
     // ====================================
     // -------------- IRON GOLEM -----------
     // ====================================
-    public static final java.util.Map<UUID, Integer> PENDING_ANVILS = new java.util.HashMap<>();
+    public static final Map<UUID, Integer> PENDING_ANVILS = new HashMap<>();
     public static final Map<FallingBlockEntity, UUID> FLYING_ANVILS = new HashMap<>();
 
     // Variáveis do Puxão e Agarrão
@@ -72,11 +72,11 @@ public class AbilityEvents {
     // CLASSE DO SKILLSHOT (O Gancho Fantasma)
     public static class GolemHook {
         public Player owner;
-        public net.minecraft.world.phys.Vec3 pos;
-        public net.minecraft.world.phys.Vec3 direction;
+        public Vec3 pos;
+        public Vec3 direction;
         public double distance;
 
-        public GolemHook(Player o, net.minecraft.world.phys.Vec3 p, net.minecraft.world.phys.Vec3 d) {
+        public GolemHook(Player o, Vec3 p, Vec3 d) {
             owner = o;
             pos = p;
             direction = d;
@@ -104,10 +104,10 @@ public class AbilityEvents {
     // ====================================
     // ------------ CHICKEN ---------------
     // ====================================
-    public static final Map<net.minecraft.world.entity.item.ItemEntity, UUID> CHICKEN_MINES = new HashMap<>();
+    public static final Map<ItemEntity, UUID> CHICKEN_MINES = new HashMap<>();
     public static final Map<UUID, Integer> CHICKEN_KNOCKBACK_VULNERABILITY = new HashMap<>();
     public static final Map<UUID, Integer> CHICKEN_BOMBERS = new HashMap<>();
-    public static final java.util.Set<net.minecraft.world.entity.projectile.Projectile> CHICKEN_BOMBER_EGGS = new HashSet<>();
+    public static final Set<Projectile> CHICKEN_BOMBER_EGGS = new HashSet<>();
     public static final Map<UUID, Integer> CHICKEN_BOMBER_COOLDOWN = new HashMap<>();
     public static final Map<UUID, Integer> CHICKEN_MACHINE_GUN_ACTIVE = new HashMap<>();
 
@@ -116,45 +116,56 @@ public class AbilityEvents {
     // ====================================
     public static class BoomerangBone {
         public Player owner;
-        public net.minecraft.world.phys.Vec3 pos;
-        public net.minecraft.world.phys.Vec3 direction;
+        public Vec3 pos;
+        public Vec3 direction;
         public int ticksAlive = 0;
         public boolean returning = false;
 
-        public BoomerangBone(Player o, net.minecraft.world.phys.Vec3 p, net.minecraft.world.phys.Vec3 d) {
-            owner = o; pos = p; direction = d;
+        public BoomerangBone(Player o, Vec3 p, Vec3 d) {
+            owner = o;
+            pos = p;
+            direction = d;
         }
     }
+
     public static final List<BoomerangBone> FLYING_BONES = new ArrayList<>();
-    
+
     public static class ArrowStorm {
         public Player owner;
-        public net.minecraft.world.phys.Vec3 pos;
+        public Vec3 pos;
         public int ticksLeft;
 
-        public ArrowStorm(Player o, net.minecraft.world.phys.Vec3 p, int ticks) {
-            owner = o; pos = p; ticksLeft = ticks;
+        public ArrowStorm(Player o, Vec3 p, int ticks) {
+            owner = o;
+            pos = p;
+            ticksLeft = ticks;
         }
     }
+
     public static final List<ArrowStorm> ARROW_STORMS = new ArrayList<>();
 
     // COD MW2 KILLSTREAK SYSTEM FOR SKELETON
     public static final Map<UUID, String> SKELETON_KILLSTREAK = new HashMap<>();
 
     public static void giveRandomKillstreak(Player player) {
-        String[] streaks = {"air_strike", "sentry_gun", "predator_missile"};
+        String[] streaks = { "air_strike", "sentry_gun", "predator_missile" };
         String chosen = streaks[new Random().nextInt(streaks.length)];
         SKELETON_KILLSTREAK.put(player.getUUID(), chosen);
-        
+
         String displayName = "";
-        if ("air_strike".equals(chosen)) displayName = "§c§lAIRSTRIKE";
-        else if ("sentry_gun".equals(chosen)) displayName = "§e§lSENTRY GUN";
-        else if ("predator_missile".equals(chosen)) displayName = "§b§lPREDATOR MISSILE";
-        
+        if ("air_strike".equals(chosen))
+            displayName = "§c§lAIRSTRIKE";
+        else if ("sentry_gun".equals(chosen))
+            displayName = "§e§lSENTRY GUN";
+        else if ("predator_missile".equals(chosen))
+            displayName = "§b§lPREDATOR MISSILE";
+
         if (player instanceof ServerPlayer serverPlayer) {
-            serverPlayer.sendSystemMessage(Component.literal("§6§l[KILLSTREAK] §aVocê ganhou a Ultimate: " + displayName + " §a!"));
+            serverPlayer.sendSystemMessage(
+                    Component.literal("§6§l[KILLSTREAK] §aVocê ganhou a Ultimate: " + displayName + " §a!"));
         }
-        player.level().playSound(null, player.blockPosition(), SoundEvents.UI_BUTTON_CLICK.value(), SoundSource.PLAYERS, 1.0F, 1.5F);
+        player.level().playSound(null, player.blockPosition(), SoundEvents.UI_BUTTON_CLICK.value(), SoundSource.PLAYERS,
+                1.0F, 1.5F);
     }
 
     public static void startAirStrike(Player player) {
@@ -162,14 +173,15 @@ public class AbilityEvents {
         // Spawn highly above
         Vec3 startPos = player.position().add(0, 30, 0).subtract(player.getLookAngle().scale(20.0));
         Vec3 dir = new Vec3(player.getLookAngle().x, 0, player.getLookAngle().z).normalize();
-        
+
         AirstrikeJetEntity jet = new AirstrikeJetEntity(SmashMobs.AIRSTRIKE_JET.get(), level);
         jet.setPos(startPos);
         jet.setOwner(player);
         jet.setDeltaMovement(dir.scale(1.5)); // Gliding speed
         level.addFreshEntity(jet);
-        
-        player.level().playSound(null, player.blockPosition(), SoundEvents.ENDER_DRAGON_GROWL, SoundSource.PLAYERS, 2.0F, 0.5F);
+
+        player.level().playSound(null, player.blockPosition(), SoundEvents.ENDER_DRAGON_GROWL, SoundSource.PLAYERS,
+                2.0F, 0.5F);
         if (player instanceof ServerPlayer serverPlayer) {
             serverPlayer.sendSystemMessage(Component.literal("§c§l[KILLSTREAK] §fAirstrike inbound!"));
         }
@@ -180,9 +192,9 @@ public class AbilityEvents {
         SentryGunEntity sentry = new SentryGunEntity(SmashMobs.SENTRY_GUN.get(), level);
         sentry.setPos(player.getX(), player.getY(), player.getZ());
         sentry.setOwner(player);
-        
+
         level.addFreshEntity(sentry);
-        
+
         level.playSound(null, player.blockPosition(), SoundEvents.ANVIL_USE, SoundSource.PLAYERS, 1.0F, 1.0F);
         if (player instanceof ServerPlayer serverPlayer) {
             serverPlayer.sendSystemMessage(Component.literal("§e§l[KILLSTREAK] §fSentry Gun implantada!"));
@@ -194,16 +206,16 @@ public class AbilityEvents {
         // Raycast to find target ground
         HitResult hr = player.pick(60.0, 0.0F, false);
         Vec3 targetPos = hr.getLocation();
-        
+
         // Spawn high above target
         Vec3 spawnPos = targetPos.add(0, 35, 0);
-        
+
         PredatorMissileEntity missile = new PredatorMissileEntity(SmashMobs.PREDATOR_MISSILE.get(), level);
         missile.setPos(spawnPos);
         missile.setDeltaMovement(0, -2.5, 0); // Dive down
         missile.setOwner(player);
         level.addFreshEntity(missile);
-        
+
         level.playSound(null, player.blockPosition(), SoundEvents.GHAST_SHOOT, SoundSource.PLAYERS, 2.0F, 0.5F);
         if (player instanceof ServerPlayer serverPlayer) {
             serverPlayer.sendSystemMessage(Component.literal("§b§l[KILLSTREAK] §fPredator Missile lançado!"));
@@ -214,26 +226,26 @@ public class AbilityEvents {
         UUID goatId = goat.getUUID();
         if (!GOAT_SWALLOWED.containsKey(goatId))
             return;
- 
+
         if (goat.level() instanceof ServerLevel sl) {
             Entity targetEntity = sl.getEntity(GOAT_SWALLOWED.get(goatId));
- 
+
             if (targetEntity instanceof LivingEntity victim && victim.isAlive()) {
                 // Teleporta de volta para a cabra antes de cuspir
                 victim.teleportTo(goat.getX(), goat.getY() + 0.5, goat.getZ());
-                
+
                 var look = goat.getLookAngle();
                 victim.setDeltaMovement(look.x * 2.0, 0.8, look.z * 2.0);
                 victim.hurt(victim.damageSources().mobAttack(goat), 6.0F);
                 victim.hurtMarked = true;
- 
+
                 victim.removeEffect(MobEffects.INVISIBILITY);
                 victim.removeEffect(MobEffects.BLINDNESS);
                 victim.removeEffect(MobEffects.LEVITATION);
- 
+
                 goat.level().playSound(null, goat.blockPosition(), SoundEvents.LLAMA_SPIT,
                         SoundSource.PLAYERS, 2.0F, 1.0F);
- 
+
                 if (victim instanceof Player victimPlayer) {
                     String morph = victimPlayer.getData(ModAttachments.MORPH_DATA);
                     Item stolenItem = null;
@@ -243,7 +255,7 @@ public class AbilityEvents {
                         stolenItem = SmashMobs.GOLEM_THROW_ANVIL.get();
                     else if (morph.equals("minecraft:goat"))
                         stolenItem = SmashMobs.GOAT_DASH.get();
- 
+
                     if (stolenItem != null && goat.getInventory().contains(new ItemStack(
                             SmashMobs.GOAT_SWALLOW.get()))) {
                         goat.getInventory().setItem(2, new ItemStack(stolenItem));
@@ -252,7 +264,7 @@ public class AbilityEvents {
                 }
             }
         }
- 
+
         GOAT_SWALLOWED.remove(goatId);
         GOAT_SWALLOWED_TIMERS.remove(goatId);
         goat.getCooldowns().addCooldown(
@@ -285,7 +297,7 @@ public class AbilityEvents {
                 double dx = target.getX() - anvil.getX();
                 double dz = target.getZ() - anvil.getZ();
                 target.knockback(1.5, -dx, -dz);
- 
+
                 anvil.level().playSound(null, anvil.blockPosition(), GOLEM_THROW_ANVIL_SOUND.get(),
                         SoundSource.PLAYERS, 1.0F, 1.0F);
                 anvil.level().playSound(null, anvil.blockPosition(), SoundEvents.IRON_GOLEM_DAMAGE,
@@ -351,12 +363,12 @@ public class AbilityEvents {
 
             double hookSpeed = 1.2; // Velocidade do tiro (1.2 blocos por tick)
             Vec3 nextPos = hook.pos.add(hook.direction.scale(hookSpeed));
- 
+
             // Verifica se o gancho bateu numa parede!
             var clipResult = hook.owner.level().clip(new ClipContext(
                     hook.pos, nextPos, ClipContext.Block.COLLIDER,
                     ClipContext.Fluid.NONE, hook.owner));
- 
+
             if (clipResult.getType() == HitResult.Type.BLOCK) {
                 // Errou! Bateu na parede. Toca um som de ferro batendo em pedra e apaga.
                 hook.owner.level().playSound(null, BlockPos.containing(clipResult.getLocation()),
@@ -365,11 +377,11 @@ public class AbilityEvents {
                 hookIterator.remove();
                 continue;
             }
- 
+
             // Move o gancho pra frente
             hook.pos = nextPos;
             hook.distance += hookSpeed;
- 
+
             // RASTRO VISUAL: Desenha partículas pra todo mundo ver o gancho voando!
             if (hook.owner.level() instanceof ServerLevel sl) {
                 // Fumaça larga e partícula de crítico pra simular um soco de ar
@@ -378,18 +390,18 @@ public class AbilityEvents {
                 sl.sendParticles(ParticleTypes.CRIT, hook.pos.x, hook.pos.y, hook.pos.z, 1,
                         0.0, 0.0, 0.0, 0.0);
             }
- 
+
             // Verifica se a "ponta" do gancho encostou em alguém
             var hitBox = new AABB(hook.pos.x - 0.5, hook.pos.y - 0.5, hook.pos.z - 0.5,
                     hook.pos.x + 0.5, hook.pos.y + 0.5, hook.pos.z + 0.5);
             var targets = hook.owner.level().getEntitiesOfClass(LivingEntity.class, hitBox,
                     e -> e != hook.owner && e.isAlive());
- 
+
             if (!targets.isEmpty()) {
                 // ACERTOU O SKILLSHOT!
                 LivingEntity hitTarget = targets.get(0);
                 PULLING_ENTITIES.put(hook.owner.getUUID(), hitTarget.getUUID());
- 
+
                 // Som de agarrão de metal
                 hook.owner.level().playSound(null, hitTarget.blockPosition(),
                         SoundEvents.IRON_GOLEM_REPAIR, SoundSource.PLAYERS,
@@ -415,20 +427,20 @@ public class AbilityEvents {
 
             bone.ticksAlive++;
             double speed = 1.0;
-            
+
             if (bone.ticksAlive > 15) {
                 bone.returning = true;
             }
-            
+
             if (bone.returning) {
                 // Direciona o osso de volta pro dono
                 Vec3 toOwner = bone.owner.getEyePosition().subtract(bone.pos).normalize();
                 bone.direction = toOwner;
                 speed = 1.2; // Volta mais rápido
             }
- 
+
             Vec3 nextPos = bone.pos.add(bone.direction.scale(speed));
-            
+
             // Verifica se voltou pro dono
             if (bone.returning && bone.pos.distanceTo(bone.owner.getEyePosition()) < 1.5) {
                 bone.owner.level().playSound(null, bone.owner.blockPosition(), SoundEvents.ITEM_PICKUP,
@@ -436,28 +448,30 @@ public class AbilityEvents {
                 boneIterator.remove();
                 continue;
             }
- 
+
             // RASTRO VISUAL
             if (bone.owner.level() instanceof ServerLevel sl) {
                 sl.sendParticles(new ItemParticleOption(ParticleTypes.ITEM, new ItemStack(Items.BONE)),
                         bone.pos.x, bone.pos.y, bone.pos.z, 2, 0.1, 0.1, 0.1, 0.0);
             }
-            
+
             var hitBox = new AABB(bone.pos.x - 0.5, bone.pos.y - 0.5, bone.pos.z - 0.5,
                     bone.pos.x + 0.5, bone.pos.y + 0.5, bone.pos.z + 0.5);
             var targets = bone.owner.level().getEntitiesOfClass(LivingEntity.class, hitBox,
                     e -> e != bone.owner && e.isAlive());
- 
+
             if (!targets.isEmpty()) {
                 LivingEntity hitTarget = targets.get(0);
                 // Evita que hite o mesmo alvo 1000 vezes por tick se estiver parado nele
                 if (bone.ticksAlive % 5 == 0) {
                     hitTarget.hurt(hitTarget.damageSources().mobAttack(bone.owner), 4.0F);
-                    hitTarget.knockback(0.5, bone.owner.getX() - hitTarget.getX(), bone.owner.getZ() - hitTarget.getZ());
-                    bone.owner.level().playSound(null, hitTarget.blockPosition(), SoundEvents.SKELETON_HURT, SoundSource.PLAYERS, 1.0F, 1.5F);
+                    hitTarget.knockback(0.5, bone.owner.getX() - hitTarget.getX(),
+                            bone.owner.getZ() - hitTarget.getZ());
+                    bone.owner.level().playSound(null, hitTarget.blockPosition(), SoundEvents.SKELETON_HURT,
+                            SoundSource.PLAYERS, 1.0F, 1.5F);
                 }
             }
-            
+
             bone.pos = nextPos;
         }
 
@@ -469,14 +483,14 @@ public class AbilityEvents {
                 stormIterator.remove();
                 continue;
             }
-            
+
             storm.ticksLeft--;
-            
+
             if (storm.ticksLeft % 3 == 0) { // Chove a cada 3 ticks
                 if (storm.owner.level() instanceof ServerLevel sl) {
                     double offsetX = (Math.random() - 0.5) * 8.0;
                     double offsetZ = (Math.random() - 0.5) * 8.0;
-                    
+
                     Projectile arrow = (Projectile) EntityType.ARROW.create(sl, EntitySpawnReason.COMMAND);
                     if (arrow != null) {
                         arrow.setPos(storm.pos.x + offsetX, storm.pos.y + 12.0, storm.pos.z + offsetZ);
@@ -487,11 +501,11 @@ public class AbilityEvents {
                     }
                 }
             }
-            
+
             // Efeitos de som
             if (storm.ticksLeft % 10 == 0) {
-                storm.owner.level().playSound(null, BlockPos.containing(storm.pos), 
-                    SoundEvents.SKELETON_SHOOT, SoundSource.PLAYERS, 0.5F, 0.5F);
+                storm.owner.level().playSound(null, BlockPos.containing(storm.pos),
+                        SoundEvents.SKELETON_SHOOT, SoundSource.PLAYERS, 0.5F, 0.5F);
             }
         }
     }
@@ -509,7 +523,7 @@ public class AbilityEvents {
 
             if (level instanceof ServerLevel serverLevel) {
                 Entity target = serverLevel.getEntity(targetId);
- 
+
                 if (target instanceof LivingEntity livingTarget) {
                     var look = golemPlayer.getLookAngle();
                     livingTarget.setDeltaMovement(look.scale(2.5).add(0, 0.8, 0));
@@ -535,10 +549,10 @@ public class AbilityEvents {
             if (!alreadyHooking) {
                 Vec3 eyePos = golemPlayer.getEyePosition();
                 Vec3 dir = golemPlayer.getLookAngle();
- 
+
                 // Cria o gancho e coloca na pista!
                 FLYING_HOOKS.add(new GolemHook(golemPlayer, eyePos, dir));
- 
+
                 // Som de lançamento no ar
                 level.playSound(null, golemPlayer.blockPosition(),
                         SoundEvents.FISHING_BOBBER_THROW, SoundSource.PLAYERS,
@@ -587,10 +601,10 @@ public class AbilityEvents {
             if (player.level() instanceof ServerLevel serverLevel) {
                 Entity target = serverLevel
                         .getEntity(PULLING_ENTITIES.get(player.getUUID()));
- 
+
                 if (target instanceof LivingEntity livingTarget && livingTarget.isAlive()) {
                     double dist = livingTarget.distanceTo(player);
- 
+
                     if (dist > 1.8) {
                         var pullVector = player.position().subtract(livingTarget.position()).normalize();
                         livingTarget.setDeltaMovement(pullVector.x * 1.2, pullVector.y * 1.2 + 0.2, pullVector.z * 1.2);
@@ -612,22 +626,22 @@ public class AbilityEvents {
         // --- LÓGICA DO GRAB FIXO (MANTÉM NA MÃO) ---
         if (GRABBED_ENTITIES.containsKey(player.getUUID())) {
             int timer = GRAB_TIMERS.getOrDefault(player.getUUID(), 0);
- 
+
             if (player.level() instanceof ServerLevel serverLevel) {
                 Entity target = serverLevel
                         .getEntity(GRABBED_ENTITIES.get(player.getUUID()));
- 
+
                 if (target instanceof LivingEntity livingTarget && livingTarget.isAlive() && timer > 0) {
                     var look = player.getLookAngle();
                     double holdX = player.getX() + (look.x * 1.5);
                     double holdY = player.getY() + 1.2;
                     double holdZ = player.getZ() + (look.z * 1.5);
- 
+
                     livingTarget.teleportTo(holdX, holdY, holdZ);
                     livingTarget.setDeltaMovement(0, 0, 0);
                     livingTarget.fallDistance = 0;
                     livingTarget.hurtMarked = true;
- 
+
                     GRAB_TIMERS.put(player.getUUID(), timer - 1);
                 } else {
                     GRABBED_ENTITIES.remove(player.getUUID());
@@ -645,24 +659,24 @@ public class AbilityEvents {
             if (ticksLeft > 0) {
                 player.addEffect(new MobEffectInstance(
                         MobEffects.SLOWNESS, 2, 255, false, false, false));
- 
+
                 double radius = 8.0;
                 var area = player.getBoundingBox().inflate(radius);
                 var targets = player.level().getEntitiesOfClass(LivingEntity.class, area,
                         e -> e != player);
- 
+
                 for (var target : targets) {
                     double dx = player.getX() - target.getX();
                     double dy = player.getY() - target.getY();
                     double dz = player.getZ() - target.getZ();
- 
+
                     Vec3 pull = new Vec3(dx, dy, dz).normalize()
                             .scale(0.08);
- 
+
                     target.setDeltaMovement(target.getDeltaMovement().add(pull));
                     target.hurtMarked = true;
                 }
- 
+
                 if (ticksLeft % 5 == 0) {
                     player.level().playSound(null, player.blockPosition(),
                             SoundEvents.CREEPER_PRIMED, SoundSource.PLAYERS,
@@ -759,10 +773,10 @@ public class AbilityEvents {
                     if (cd > 0)
                         CHICKEN_BOMBER_COOLDOWN.put(player.getUUID(), cd - 1);
                 }
- 
+
                 player.addEffect(new MobEffectInstance(
                         MobEffects.SLOW_FALLING, 5, 0, false, false, false));
- 
+
                 if (ticksLeft > 140) {
                     player.addEffect(new MobEffectInstance(
                             MobEffects.LEVITATION, 5, 8, false, false, false));
@@ -793,17 +807,17 @@ public class AbilityEvents {
         // --- LÓGICA DE ENGOLIR (KIRBY) ---
         if (GOAT_SWALLOWED.containsKey(player.getUUID())) {
             int ticksLeft = GOAT_SWALLOWED_TIMERS.getOrDefault(player.getUUID(), 0);
- 
+
             if (player.level() instanceof ServerLevel sl) {
                 Entity targetEntity = sl.getEntity(GOAT_SWALLOWED.get(player.getUUID()));
- 
+
                 if (targetEntity instanceof LivingEntity victim && victim.isAlive() && ticksLeft > 0) {
- 
+
                     // Manda a vítima lá para o alto para ela não conseguir bater na cabra
                     victim.teleportTo(player.getX(), player.getY() + 100, player.getZ());
                     victim.setDeltaMovement(0, 0, 0);
                     victim.fallDistance = 0;
-                    
+
                     victim.addEffect(new MobEffectInstance(
                             MobEffects.INVISIBILITY, 10, 0, false, false, false));
                     victim.addEffect(new MobEffectInstance(
@@ -834,7 +848,7 @@ public class AbilityEvents {
                     sl.sendParticles(ParticleTypes.SWEEP_ATTACK, player.getX(),
                             player.getY() + 1.0, player.getZ(), 3, 1.5, 0.5, 1.5, 0.0);
                 }
- 
+
                 if (phaseTicks % 5 == 0) {
                     player.level().playSound(null, player.blockPosition(),
                             SoundEvents.PLAYER_ATTACK_SWEEP,
@@ -848,7 +862,7 @@ public class AbilityEvents {
                         t.setDeltaMovement(t.getDeltaMovement().add(pull));
                     }
                 }
- 
+
                 GOAT_AVALANCHES.put(player.getUUID(), phaseTicks - 1);
             } else if (phaseTicks == 0) { // FASE 2: O PULO
                 player.setDeltaMovement(0, 1.5, 0);
@@ -862,12 +876,12 @@ public class AbilityEvents {
                     player.level().playSound(null, player.blockPosition(),
                             SoundEvents.GENERIC_EXPLODE.value(),
                             SoundSource.PLAYERS, 2.0F, 0.8F);
- 
+
                     if (player.level() instanceof ServerLevel sl) {
                         sl.sendParticles(ParticleTypes.EXPLOSION_EMITTER, player.getX(),
                                 player.getY(), player.getZ(), 1, 0, 0, 0, 0.0);
                     }
- 
+
                     var area = player.getBoundingBox().inflate(6.0);
                     var targets = player.level().getEntitiesOfClass(LivingEntity.class, area,
                             e -> e != player && e.isAlive());
@@ -875,7 +889,7 @@ public class AbilityEvents {
                         t.hurt(t.damageSources().mobAttack(player), 15.0F);
                         t.addEffect(new MobEffectInstance(
                                 MobEffects.SLOWNESS, 60, 4));
- 
+
                         double dx = t.getX() - player.getX();
                         double dz = t.getZ() - player.getZ();
                         t.knockback(1.5, -dx, -dz);
@@ -903,15 +917,32 @@ public class AbilityEvents {
     public static void onPlayerDamage(LivingDamageEvent.Pre event) {
         if (event.getEntity() instanceof Player player && !player.level().isClientSide()) {
             // 1. TRATAMENTO DE QUEDA NO VOID (Morte do Smash)
-            if (event.getSource().is(net.minecraft.world.damagesource.DamageTypes.FELL_OUT_OF_WORLD)) {
+            if (event.getSource().is(DamageTypes.FELL_OUT_OF_WORLD)) {
                 event.setNewDamage(0.0f); // Evita a morte padrão do Minecraft (cancela o dano real)
- 
+
+                // Se o jogo ainda não começou, só reseta a posição sem punir vidas!
+                if (!GameManager.isGameRunning) {
+                    if (player instanceof ServerPlayer serverPlayer) {
+                        net.minecraft.world.phys.Vec3 arenaSpawn = SmashPositionManager.getArenaVec();
+                        serverPlayer.teleportTo(arenaSpawn.x, arenaSpawn.y, arenaSpawn.z);
+                        serverPlayer.setDeltaMovement(0, 0, 0);
+                        serverPlayer.fallDistance = 0;
+                        serverPlayer.setHealth(serverPlayer.getMaxHealth());
+                    }
+                    return;
+                }
+
                 int lives = player.getData(ModAttachments.PLAYER_LIVES);
                 lives--; // Perde uma vida
- 
+
                 player.setData(ModAttachments.PLAYER_LIVES, lives);
                 player.setData(ModAttachments.DAMAGE_PERCENT, 0.0f); // Reseta porcentagem
-                
+ 
+                // Recompensa: Sempre que alguém perde a vida, TODOS os Skeletons ganham uma ultimate!
+                if (player.level().getServer() != null) {
+                    giveSkeletonUltToAll(player.level().getServer());
+                }
+
                 // ATUALIZA O SCOREBOARD PARA 0
                 if (player.level().getServer() != null) {
                     Scoreboard scoreboard = player.level().getServer().getScoreboard();
@@ -920,12 +951,14 @@ public class AbilityEvents {
                         scoreboard.getOrCreatePlayerScore(player, obj).set(0);
                     }
                 }
- 
+
                 if (player instanceof ServerPlayer serverPlayer) {
+                    net.minecraft.world.phys.Vec3 arenaSpawn = SmashPositionManager.getArenaVec();
+
                     if (lives > 0) {
                         serverPlayer.sendSystemMessage(
                                 Component.literal("§cVocê caiu! Vidas restantes: " + lives));
-                        serverPlayer.teleportTo(0, 100, 0);
+                        serverPlayer.teleportTo(arenaSpawn.x, arenaSpawn.y, arenaSpawn.z);
                         serverPlayer.setDeltaMovement(0, 0, 0);
                         serverPlayer.fallDistance = 0;
                         serverPlayer.setHealth(serverPlayer.getMaxHealth());
@@ -933,6 +966,9 @@ public class AbilityEvents {
                         serverPlayer.sendSystemMessage(
                                 Component.literal("§4Você foi eliminado!"));
                         serverPlayer.setGameMode(GameType.SPECTATOR);
+                        serverPlayer.teleportTo(arenaSpawn.x, arenaSpawn.y, arenaSpawn.z);
+                        serverPlayer.setDeltaMovement(0, 0, 0);
+                        serverPlayer.fallDistance = 0;
                     }
                 }
                 return;
@@ -945,11 +981,11 @@ public class AbilityEvents {
 
             // Pega a porcentagem atual do jogador
             float currentPercent = player.getData(ModAttachments.DAMAGE_PERCENT);
- 
+
             // Aumenta a porcentagem baseado no dano original
             float newPercent = currentPercent + (event.getOriginalDamage() * 3.0f); // Cada 1 de dano dá 3%
             player.setData(ModAttachments.DAMAGE_PERCENT, newPercent);
-            
+
             // ATUALIZA O SCOREBOARD VISUAL
             if (player.level().getServer() != null) {
                 Scoreboard scoreboard = player.level().getServer().getScoreboard();
@@ -958,10 +994,10 @@ public class AbilityEvents {
                     scoreboard.getOrCreatePlayerScore(player, obj).set((int) newPercent);
                 }
             }
- 
+
             // Cancela o dano para o jogador não morrer
             event.setNewDamage(0.001f); // Dano quase nulo para tocar som e animação de piscar vermelho
- 
+
             // Aplica repulsão extra (Knockback)
             Entity attacker = event.getSource().getEntity();
             if (attacker != null) {
@@ -993,7 +1029,7 @@ public class AbilityEvents {
                         Level.ExplosionInteraction.NONE);
                 egg.level().playSound(null, egg.blockPosition(), SoundEvents.CHICKEN_HURT,
                         SoundSource.PLAYERS, 2.0F, 0.5F);
- 
+
                 for (int x = -2; x <= 2; x++) {
                     for (int z = -2; z <= 2; z++) {
                         if (Math.random() > 0.5) {
@@ -1007,7 +1043,7 @@ public class AbilityEvents {
                     }
                 }
                 CHICKEN_BOMBER_EGGS.remove(egg);
-                
+
                 // Remove o ovo e cancela para NÃO nascer pintinhos
                 egg.discard();
                 event.setCanceled(true);
@@ -1021,7 +1057,7 @@ public class AbilityEvents {
                         victim.hurt(victim.damageSources().thrown(egg, owner), 1.0F);
                     }
                 }
-                
+
                 // Remove o ovo e cancela para NÃO nascer pintinhos
                 egg.discard();
                 event.setCanceled(true);
@@ -1060,7 +1096,7 @@ public class AbilityEvents {
     public static void onLivingDeath(LivingDeathEvent event) {
         if (event.getEntity() instanceof Player player) {
             spitSwallowedEntity(player); // Se o jogador engoliu alguém e morreu, ele cospe a vítima
-            
+
             // COD MW2 Killstreak award to active Skeletons
             if (!player.level().isClientSide()) {
                 for (Player p : player.level().players()) {
@@ -1081,14 +1117,14 @@ public class AbilityEvents {
         var look = player.getLookAngle();
         var spawnPos = BlockPos.containing(player.getX(), player.getEyeY() + 0.5D, player.getZ());
         var oldState = level.getBlockState(spawnPos);
- 
+
         FallingBlockEntity anvil = FallingBlockEntity.fall(level, spawnPos,
                 Blocks.ANVIL.defaultBlockState());
- 
+
         level.setBlock(spawnPos, oldState, 3);
         anvil.setHurtsEntities(2.0F, 20);
         anvil.time = 1;
- 
+
         anvil.setDeltaMovement(look.scale(2.5D).add(0, 0.2D, 0));
         FLYING_ANVILS.put(anvil, player.getUUID());
         level.playSound(null, player.blockPosition(), SoundEvents.ANVIL_DESTROY,
@@ -1104,7 +1140,7 @@ public class AbilityEvents {
         double spawnX = player.getX() - (look.x * 5);
         double spawnY = player.getY();
         double spawnZ = player.getZ() - (look.z * 5);
- 
+
         GolemTrainEntity train = new GolemTrainEntity(
                 SmashMobs.GOLEM_TRAIN.get(), level);
 
@@ -1131,7 +1167,7 @@ public class AbilityEvents {
         train.setYBodyRot(finalRot); // Essencial para GeoEntities!
 
         level.addFreshEntity(train);
- 
+
         level.playSound(null, player.blockPosition(), GOLEM_SUPREME_SOUND.get(),
                 SoundSource.PLAYERS, 2.0F, 0.9F);
     }
@@ -1141,16 +1177,16 @@ public class AbilityEvents {
         if (!level.isClientSide()) {
             level.playSound(null, player.blockPosition(), SoundEvents.CHICKEN_EGG,
                     SoundSource.PLAYERS, 1.0F, 1.5F);
- 
+
             ThrowableProjectile egg = (ThrowableProjectile) EntityType.EGG
                     .create(level, EntitySpawnReason.TRIGGERED);
- 
+
             if (egg != null) {
                 egg.setPos(player.getX(), player.getEyeY() - 0.1, player.getZ());
                 egg.setOwner(player);
                 egg.shootFromRotation(player, player.getXRot(), player.getYRot(), 0.0F, 2.0F, 14.0F);
                 level.addFreshEntity(egg);
- 
+
                 level.playSound(null, player.blockPosition(), SoundEvents.EGG_THROW,
                         SoundSource.PLAYERS, 0.5F,
                         1.2F + (level.getRandom().nextFloat() * 0.5f));
@@ -1165,5 +1201,32 @@ public class AbilityEvents {
         Vec3 eyePos = player.getEyePosition();
         Vec3 dir = player.getLookAngle();
         FLYING_BONES.add(new BoomerangBone(player, eyePos, dir));
+    }
+ 
+    // =================================================================
+    // RECOMPENSA DE ULTIMATE RANDÔMICA PARA TODOS OS SKELETONS
+    // =================================================================
+    public static void giveSkeletonUltToAll(net.minecraft.server.MinecraftServer server) {
+        if (server == null) return;
+ 
+        net.minecraft.world.item.Item[] pool = {
+            SmashMobs.SKELETON_PREDATOR_MISSILE.get(),
+            SmashMobs.SKELETON_AIRSTRIKE.get(),
+            SmashMobs.SKELETON_SENTRY.get()
+        };
+ 
+        java.util.Random random = new java.util.Random();
+ 
+        for (net.minecraft.server.level.ServerPlayer player : server.getPlayerList().getPlayers()) {
+            String morph = player.getData(ModAttachments.MORPH_DATA);
+            if ("minecraft:skeleton".equals(morph)) {
+                net.minecraft.world.item.Item selected = pool[random.nextInt(pool.length)];
+                player.addItem(new net.minecraft.world.item.ItemStack(selected));
+                player.containerMenu.broadcastChanges(); // Força sincronismo do inventário visual!
+                player.sendSystemMessage(
+                    net.minecraft.network.chat.Component.literal("§6[Soldado] §eAlguém caiu! Você ganhou uma habilidade tática!")
+                );
+            }
+        }
     }
 }

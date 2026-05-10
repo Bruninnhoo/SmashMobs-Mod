@@ -1,0 +1,25 @@
+{
+	"format_version": "1.21.110",
+	"minecraft:geometry": [
+		{
+			"description": {
+				"identifier": "geometry.notebook",
+				"texture_width": 64,
+				"texture_height": 64,
+				"visible_bounds_width": 3,
+				"visible_bounds_height": 2.5,
+				"visible_bounds_offset": [0, 0.75, 0]
+			},
+			"bones": [
+				{
+					"name": "bb_main",
+					"pivot": [0, 0, 0],
+					"cubes": [
+						{"origin": [-8, 0, -8], "size": [16, 1.25, 16], "uv": [0, 0]},
+						{"origin": [-8, 1, -8], "size": [16, 0.85, 16], "pivot": [0, 1, 7.4], "rotation": [-90, 0, 0], "uv": [0, 17]}
+					]
+				}
+			]
+		}
+	]
+}

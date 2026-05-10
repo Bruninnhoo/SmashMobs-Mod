@@ -199,8 +199,14 @@ public class SmashMobs {
         public static final DeferredItem<SkeletonBoomerangItem> SKELETON_BOOMERANG = ITEMS.registerItem(
                         "skeleton_boomerang", p -> new SkeletonBoomerangItem(p.stacksTo(1)));
 
-        public static final DeferredItem<SkeletonUltItem> SKELETON_ULTIMATE = ITEMS.registerItem(
-                        "skeleton_ultimate", p -> new SkeletonUltItem(p.stacksTo(1)));
+        public static final DeferredItem<SkeletonPredatorMissileItem> SKELETON_PREDATOR_MISSILE = ITEMS.registerItem(
+                        "skeleton_predator_missile", p -> new SkeletonPredatorMissileItem(p.stacksTo(64)));
+ 
+        public static final DeferredItem<SkeletonAirstrikeItem> SKELETON_AIRSTRIKE = ITEMS.registerItem(
+                        "skeleton_airstrike", p -> new SkeletonAirstrikeItem(p.stacksTo(64)));
+ 
+        public static final DeferredItem<SkeletonSentryItem> SKELETON_SENTRY = ITEMS.registerItem(
+                        "skeleton_sentry", p -> new SkeletonSentryItem(p.stacksTo(64)));
 
         public static final Supplier<SoundEvent> SKELETON_SHOOT_SOUND = SOUNDS.register("skelleton_shoot",
                         SoundEvent::createVariableRangeEvent);
@@ -252,6 +258,9 @@ public class SmashMobs {
                         event.accept(CREEPER_THROW_TNT);
                         event.accept(CREEPER_SUPREME);
                         event.accept(SKELETON_SNIPER);
+                        event.accept(SKELETON_PREDATOR_MISSILE);
+                        event.accept(SKELETON_AIRSTRIKE);
+                        event.accept(SKELETON_SENTRY);
                 }
         }
 

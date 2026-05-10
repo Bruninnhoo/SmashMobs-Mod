@@ -20,14 +20,15 @@ public class GameManager {
     // Método para dar a largada!
     public static void startGame(Iterable<ServerPlayer> players) {
         isGameRunning = true;
-        
+
         MinecraftServer server = null;
+        net.minecraft.world.phys.Vec3 arenaSpawn = SmashPositionManager.getArenaVec();
 
         for (ServerPlayer player : players) {
             if (server == null) {
                 server = player.level().getServer();
             }
-            
+
             // Seta os status de todos
             player.setData(ModAttachments.PLAYER_LIVES, 3);
             player.setData(ModAttachments.DAMAGE_PERCENT, 0.0f);
@@ -40,20 +41,25 @@ public class GameManager {
 
             // Tira do modo espectador se estivesse morto
             if (player.gameMode.getGameModeForPlayer() == GameType.SPECTATOR) {
-                player.setGameMode(GameType.SURVIVAL); // ou ADVENTURE
+                player.setGameMode(GameType.ADVENTURE); // ou ADVENTURE
             }
 
-            player.teleportTo(0, 100, 0);
+            if (arenaSpawn != null) {
+                player.teleportTo(arenaSpawn.x, arenaSpawn.y, arenaSpawn.z);
+            } else {
+                player.teleportTo(0, 100, 0);
+            }
         }
-        
+
         if (server != null) {
             Scoreboard scoreboard = server.getScoreboard();
             Objective objective = scoreboard.getObjective("smash_percent");
             if (objective == null) {
-                objective = scoreboard.addObjective("smash_percent", ObjectiveCriteria.DUMMY, Component.literal("Dano %"), ObjectiveCriteria.RenderType.INTEGER, true, null);
+                objective = scoreboard.addObjective("smash_percent", ObjectiveCriteria.DUMMY,
+                        Component.literal("Dano %"), ObjectiveCriteria.RenderType.INTEGER, true, null);
             }
             scoreboard.setDisplayObjective(DisplaySlot.BELOW_NAME, objective);
-            
+
             // Reseta a pontuação visual de todo mundo
             for (ServerPlayer player : players) {
                 scoreboard.getOrCreatePlayerScore(player, objective).set(0);
@@ -68,10 +74,17 @@ public class GameManager {
         server.getPlayerList().broadcastSystemMessage(
                 Component.literal("§c🛑 A partida foi encerrada pelo Administrador!"), false);
 
-        // Pode colocar todos em modo aventura ou resetar algo
+        net.minecraft.world.phys.Vec3 lobbySpawn = SmashPositionManager.getLobbyVec();
+
         for (ServerPlayer player : server.getPlayerList().getPlayers()) {
             player.setData(ModAttachments.PLAYER_LIVES, 0);
             player.setData(ModAttachments.DAMAGE_PERCENT, 0.0f);
+            // Teleporta geral de volta pro lobby quando o admin acaba a partida
+            player.setGameMode(GameType.ADVENTURE); // Garante que ninguém fique como spec
+            player.teleportTo(lobbySpawn.x, lobbySpawn.y, lobbySpawn.z);
+            player.setDeltaMovement(0, 0, 0);
+            player.fallDistance = 0;
+            player.setHealth(player.getMaxHealth());
         }
 
         // Limpa as minas da galinha
@@ -81,7 +94,7 @@ public class GameManager {
             }
         }
         AbilityEvents.CHICKEN_MINES.clear();
-        
+
         // Limpa bigornas
         for (FallingBlockEntity anvil : AbilityEvents.FLYING_ANVILS.keySet()) {
             if (anvil != null && anvil.isAlive()) {
@@ -89,7 +102,7 @@ public class GameManager {
             }
         }
         AbilityEvents.FLYING_ANVILS.clear();
-        
+
         // Limpa poderes do esqueleto
         AbilityEvents.FLYING_BONES.clear();
         AbilityEvents.ARROW_STORMS.clear();

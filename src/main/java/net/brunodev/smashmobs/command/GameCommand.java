@@ -33,6 +33,22 @@ public class GameCommand {
                             return 1;
                         })
                 )
+                .then(Commands.literal("setlobby")
+                        .executes(context -> {
+                            ServerPlayer player = context.getSource().getPlayerOrException();
+                            net.brunodev.smashmobs.server.SmashPositionManager.setLobbyPos(player.blockPosition());
+                            context.getSource().sendSuccess(() -> net.minecraft.network.chat.Component.literal("§a[Smash] Lobby definido na sua posição!"), true);
+                            return 1;
+                        })
+                )
+                .then(Commands.literal("setarena")
+                        .executes(context -> {
+                            ServerPlayer player = context.getSource().getPlayerOrException();
+                            net.brunodev.smashmobs.server.SmashPositionManager.setArenaPos(player.blockPosition());
+                            context.getSource().sendSuccess(() -> net.minecraft.network.chat.Component.literal("§6[Smash] Centro da Arena definido na sua posição!"), true);
+                            return 1;
+                        })
+                )
         );
     }
 }
