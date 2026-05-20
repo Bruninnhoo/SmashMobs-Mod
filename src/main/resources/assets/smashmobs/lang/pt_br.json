@@ -1,0 +1,38 @@
+{
+  "itemGroup.smashmobs": "SmashMobs",
+  
+  "item.smashmobs.creeper_explosion": "Explosão de Creeper",
+  "item.smashmobs.throw_tnt": "Arremessar TNT",
+  "item.smashmobs.creeper_supreme": "Creeper Supremo",
+  
+  "item.smashmobs.golem_throw_anvil": "Lançar Bigorna",
+  "item.smashmobs.golem_grab": "Agarrar Inimigo",
+  "item.smashmobs.golem_supreme": "Trem de Ferro Supremo",
+
+  "item.smashmobs.goat_dash": "Investida de Bode",
+  "item.smashmobs.goat_swallow": "Engolir Entidade",
+  "item.smashmobs.goat_supreme": "Bode Supremo",
+
+  "item.smashmobs.chicken_trap": "Armadilha de Ovos",
+  "item.smashmobs.chicken_machine_gun": "Metralhadora de Ovos",
+  "item.smashmobs.chicken_supreme": "Chuva de Penas Supremo",
+
+  "item.smashmobs.skeleton_sniper": "AWP do Esqueleto",
+  "item.smashmobs.skeleton_boomerang": "Bumerangue de Osso",
+  "item.smashmobs.skeleton_predator_missile": "Notebook do Míssil Predator",
+  "item.smashmobs.skeleton_airstrike": "Marcador de Ataque Aéreo",
+  "item.smashmobs.skeleton_sentry": "Instalar Sentinela",
+
+  "entity.smashmobs.skeleton_morph": "Esqueleto Sniper",
+  "entity.smashmobs.iron_golem_morph": "Golem de Ferro",
+  "entity.smashmobs.bullet": "Bala de AWP",
+  "entity.smashmobs.predator_missile": "Míssil Predator",
+  "entity.smashmobs.airstrike_jet": "Caça de Suporte",
+  "entity.smashmobs.sentry_gun": "Torreta Sentinela",
+  "entity.smashmobs.golem_train": "Expresso Golem",
+  
+  "subtitles.creeper_launch": "Creeper decolou",
+  "subtitles.pick_mob": "Mob selecionado",
+
+  "smashmobs.configuration.title": "Configurações do SmashMobs"
+}

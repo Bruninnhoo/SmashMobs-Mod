@@ -47,9 +47,29 @@ public class SkeletonSniperItem extends SmashMobItemBase implements GeoItem {
  
     @Override
     public void registerControllers(AnimatableManager.ControllerRegistrar controllers) {
-        controllers.add(new AnimationController<>("controller", 2, event -> PlayState.CONTINUE));
+        // O Controlador primário fica em modo de escuta para gatilhos manuais de animação!
+        controllers.add(new AnimationController<>("controller", 2, event -> PlayState.CONTINUE)
+                .triggerableAnim("reload", software.bernie.geckolib.animation.RawAnimation.begin().thenPlay("awp.reload")));
     }
- 
+    
+    /**
+     * Ativado externamente (pela bala) quando há um erro no disparo!
+     */
+    public static void executeReload(net.minecraft.server.level.ServerPlayer player, ItemStack stack) {
+        if (stack.getItem() instanceof SkeletonSniperItem sniper) {
+            // 1. Aplica o cooldown maior de Recarga (1.7 segundos ~ 35 ticks)
+            player.getCooldowns().addCooldown(stack, 35);
+            
+            // 2. Dispara o gatilho de animação da Geckolib que sincroniza com todos os clientes
+            long animId = software.bernie.geckolib.animatable.GeoItem.getOrAssignId(stack, (net.minecraft.server.level.ServerLevel) player.level());
+            sniper.triggerAnim(player, animId, "controller", "reload");
+            
+            // 3. Efeitos sonoros de recarregamento!
+            player.level().playSound(null, player.getX(), player.getY(), player.getZ(),
+                    SoundEvents.CROSSBOW_LOADING_END.value(), SoundSource.PLAYERS, 1.0F, 1.5F);
+        }
+    }
+
     @Override
     public AnimatableInstanceCache getAnimatableInstanceCache() {
         return this.cache;
@@ -68,7 +88,15 @@ public class SkeletonSniperItem extends SmashMobItemBase implements GeoItem {
             @Override
             public GeoItemRenderer<SkeletonSniperItem> getGeoItemRenderer() {
                 if (this.renderer == null) {
-                    GeoItemRenderer<SkeletonSniperItem> r = new GeoItemRenderer<>(new DefaultedItemGeoModel<>(Identifier.parse("smashmobs:awp"))) {
+                    // FORÇANDO O CAMINHO DA TEXTURA PARA EVITAR ERRO DE INFERÊNCIA DO GECKOLIB!
+                    var customModel = new DefaultedItemGeoModel<SkeletonSniperItem>(Identifier.parse("smashmobs:awp")) {
+                        @Override
+                        public Identifier getTextureResource(GeoRenderState renderState) {
+                            return Identifier.parse("smashmobs:textures/item/awp.png");
+                        }
+                    };
+
+                    GeoItemRenderer<SkeletonSniperItem> r = new GeoItemRenderer<>(customModel) {
                         @Override
                         public void adjustRenderPose(RenderPassInfo<GeoRenderState> info) {
                             super.adjustRenderPose(info);
@@ -172,7 +200,8 @@ public class SkeletonSniperItem extends SmashMobItemBase implements GeoItem {
             level.playSound(null, player.getX(), player.getY(), player.getZ(),
                     SmashMobs.SKELETON_SHOOT_SOUND.get(), SoundSource.PLAYERS, 1.0F, 1.5F);
  
-            player.getCooldowns().addCooldown(itemstack, 80);
+            // O Cooldown padrão inicial da habilidade é reduzido para incentivar acertos! (25 ticks = 1.25s)
+            player.getCooldowns().addCooldown(itemstack, 25);
         }
  
         player.awardStat(Stats.ITEM_USED.get(this));

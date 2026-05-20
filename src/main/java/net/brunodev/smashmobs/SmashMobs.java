@@ -250,6 +250,10 @@ public class SmashMobs {
 
         private void commonSetup(FMLCommonSetupEvent event) {
                 LOGGER.info("HELLO FROM SMASH MOBS SETUP!");
+                
+                // REGISTRO OBRIGATÓRIO DO GECKOLIB PARA SINCRONIZAÇÃO DE ANIMAÇÕES (RELOAD, ETC)
+                software.bernie.geckolib.animatable.SingletonGeoAnimatable.registerSyncedAnimatable(SKELETON_SNIPER.get());
+                software.bernie.geckolib.animatable.SingletonGeoAnimatable.registerSyncedAnimatable(SKELETON_PREDATOR_MISSILE.get());
         }
 
         private void addCreative(BuildCreativeModeTabContentsEvent event) {

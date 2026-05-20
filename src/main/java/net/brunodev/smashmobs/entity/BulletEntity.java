@@ -55,6 +55,9 @@ public class BulletEntity extends Projectile implements GeoEntity {
         this.setPos(nextPos);
     }
 
+    // Rastreia se o projétil atingiu o alvo com sucesso
+    private boolean hasHitTarget = false;
+
     @Override
     protected void onHitEntity(EntityHitResult result) {
         super.onHitEntity(result);
@@ -63,6 +66,8 @@ public class BulletEntity extends Projectile implements GeoEntity {
             if (target instanceof LivingEntity le) {
                 var owner = this.getOwner();
                 if (owner instanceof LivingEntity shooter) {
+                    // ACERTOU! Marca como sucesso para pular a recarga penalizada
+                    this.hasHitTarget = true;
                     le.hurt(this.damageSources().mobAttack(shooter), (float) damage);
                 } else {
                     le.hurt(this.damageSources().generic(), (float) damage);
@@ -75,8 +80,37 @@ public class BulletEntity extends Projectile implements GeoEntity {
     @Override
     protected void onHit(HitResult result) {
         super.onHit(result);
-        if (result.getType() == HitResult.Type.BLOCK && !this.level().isClientSide()) {
+        if (!this.level().isClientSide()) {
+            // Se bater num bloco, é um ERRO (Miss!)
+            if (result.getType() == HitResult.Type.BLOCK && !this.hasHitTarget) {
+                triggerOwnerReload();
+            }
             this.discard();
+        }
+    }
+    
+    @Override
+    public void remove(RemovalReason reason) {
+        // Se a bala sumiu e nunca acertou ninguém (Expirou por tempo), aciona a recarga do mesmo jeito!
+        if (!this.level().isClientSide() && !this.hasHitTarget && reason == RemovalReason.DISCARDED) {
+            triggerOwnerReload();
+        }
+        super.remove(reason);
+    }
+
+    private void triggerOwnerReload() {
+        // Só deve disparar recarga UMA VEZ por bala
+        this.hasHitTarget = true; 
+        
+        if (this.getOwner() instanceof net.minecraft.server.level.ServerPlayer player) {
+            // Verifica o item que o jogador está segurando para garantir animação local
+            net.minecraft.world.item.ItemStack stack = player.getMainHandItem();
+            if (stack.getItem() instanceof net.brunodev.smashmobs.item.SkeletonSniperItem) {
+                net.brunodev.smashmobs.item.SkeletonSniperItem.executeReload(player, stack);
+            } else {
+                // Se ele mudou de item, ainda aplica o cooldown na classe do item na mochila!
+                player.getCooldowns().addCooldown(new net.minecraft.world.item.ItemStack(net.brunodev.smashmobs.SmashMobs.SKELETON_SNIPER.get()), 35);
+            }
         }
     }
 

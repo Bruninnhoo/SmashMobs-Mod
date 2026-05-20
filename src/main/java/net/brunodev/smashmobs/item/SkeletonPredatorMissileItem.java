@@ -45,9 +45,13 @@ public class SkeletonPredatorMissileItem extends SmashMobItemBase implements Geo
             @Override
             public GeoItemRenderer<SkeletonPredatorMissileItem> getGeoItemRenderer() {
                 if (this.renderer == null) {
-                    this.renderer = new GeoItemRenderer<>(
-                        new DefaultedItemGeoModel<>(Identifier.parse("smashmobs:notebook"))
-                    );
+                    var customModel = new DefaultedItemGeoModel<SkeletonPredatorMissileItem>(Identifier.parse("smashmobs:notebook")) {
+                        @Override
+                        public Identifier getTextureResource(software.bernie.geckolib.renderer.base.GeoRenderState renderState) {
+                            return Identifier.parse("smashmobs:textures/item/notebook.png");
+                        }
+                    };
+                    this.renderer = new GeoItemRenderer<>(customModel);
                 }
                 return this.renderer;
             }

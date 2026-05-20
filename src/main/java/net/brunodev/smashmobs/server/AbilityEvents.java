@@ -1136,6 +1136,19 @@ public class AbilityEvents {
     }
 
     @SubscribeEvent
+    public static void onPlayerAttack(net.neoforged.neoforge.event.entity.player.AttackEntityEvent event) {
+        Player player = event.getEntity();
+        ItemStack heldItem = player.getItemInHand(InteractionHand.MAIN_HAND);
+        
+        // Se o esqueleto estiver recarregando a AWP, ele não pode bater (melee ou tiro) até terminar!
+        if (heldItem.getItem() instanceof net.brunodev.smashmobs.item.SkeletonSniperItem) {
+            if (player.getCooldowns().isOnCooldown(heldItem)) {
+                event.setCanceled(true);
+            }
+        }
+    }
+
+    @SubscribeEvent
     public static void onLivingDeath(LivingDeathEvent event) {
         if (event.getEntity() instanceof Player player) {
             spitSwallowedEntity(player); // Se o jogador engoliu alguém e morreu, ele cospe a vítima

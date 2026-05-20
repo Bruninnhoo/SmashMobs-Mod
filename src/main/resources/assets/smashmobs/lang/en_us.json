@@ -1,13 +1,38 @@
 {
-  "itemGroup.smashmobs": "Example Mod Tab",
-  "block.smashmobs.example_block": "Example Block",
-  "item.smashmobs.example_item": "Example Item",
+  "itemGroup.smashmobs": "SmashMobs",
+  
+  "item.smashmobs.creeper_explosion": "Creeper Boom",
+  "item.smashmobs.throw_tnt": "Throw TNT",
+  "item.smashmobs.creeper_supreme": "Creeper Supreme",
+  
+  "item.smashmobs.golem_throw_anvil": "Throw Anvil",
+  "item.smashmobs.golem_grab": "Golem Grab",
+  "item.smashmobs.golem_supreme": "Iron Train Ultimate",
 
-  "smashmobs.configuration.title": "SmashMobs Configs",
-  "smashmobs.configuration.section.smashmobs.common.toml": "SmashMobs Configs",
-  "smashmobs.configuration.section.smashmobs.common.toml.title": "SmashMobs Configs",
-  "smashmobs.configuration.items": "Item List",
-  "smashmobs.configuration.logDirtBlock": "Log Dirt Block",
-  "smashmobs.configuration.magicNumberIntroduction": "Magic Number Text",
-  "smashmobs.configuration.magicNumber": "Magic Number"
+  "item.smashmobs.goat_dash": "Goat Ram",
+  "item.smashmobs.goat_swallow": "Swallow Entity",
+  "item.smashmobs.goat_supreme": "Goat Supreme",
+
+  "item.smashmobs.chicken_trap": "Egg Trap",
+  "item.smashmobs.chicken_machine_gun": "Chicken Gun",
+  "item.smashmobs.chicken_supreme": "Feather Rain Ultimate",
+
+  "item.smashmobs.skeleton_sniper": "Skeleton Sniper AWP",
+  "item.smashmobs.skeleton_boomerang": "Bone Boomerang",
+  "item.smashmobs.skeleton_predator_missile": "Predator Missile Controller",
+  "item.smashmobs.skeleton_airstrike": "Airstrike Marker",
+  "item.smashmobs.skeleton_sentry": "Sentry Gun Deploy",
+
+  "entity.smashmobs.skeleton_morph": "Skeleton Sniper",
+  "entity.smashmobs.iron_golem_morph": "Iron Golem",
+  "entity.smashmobs.bullet": "AWP Bullet",
+  "entity.smashmobs.predator_missile": "Predator Missile",
+  "entity.smashmobs.airstrike_jet": "Support Fighter Jet",
+  "entity.smashmobs.sentry_gun": "Sentry Turret",
+  "entity.smashmobs.golem_train": "The Golem Express",
+  
+  "subtitles.creeper_launch": "Creeper launched",
+  "subtitles.pick_mob": "Mob selected",
+
+  "smashmobs.configuration.title": "SmashMobs Configs"
 }
